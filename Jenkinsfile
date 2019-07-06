@@ -14,6 +14,7 @@ pipeline {
         VERSION = "${env.BRANCH_NAME == 'master' && !env.LAST_COMMIT_MESSAGE.startsWith('update version to ') ? env.RELEASE_VERSION : env.SNAPSHOT_VERSION}"
         NAMESPACE = "${env.BRANCH_NAME == 'master' ? 'onlineshop' : 'onlineshop-test'}"
         PORT = "${env.BRANCH_NAME == 'master' ? '30000' : '31000'}"
+        HELM_PORT = "${env.BRANCH_NAME == 'master' ? '44134' : '44135'}"
         TEST_PORT = "${env.BRANCH_NAME == 'master' ? '6000' : '6100'}"
         ARQUILLIAN_DAEMON_PORT = "${env.BRANCH_NAME == 'master' ? '12349' : '12350'}"
     }
@@ -85,6 +86,12 @@ pipeline {
                     docker tag customer host.docker.internal:5000/customer:${env.BRANCH_NAME == 'master' ? 'stable' : 'latest'}
                     docker push host.docker.internal:5000/customer:${env.VERSION}
                     docker push host.docker.internal:5000/customer:${env.BRANCH_NAME == 'master' ? 'stable' : 'latest'}
+                """
+                sh """
+                    cd ./helm 
+                    export HELM_HOST=host.docker.internal:${env.HELM_PORT}
+                    helm package ./customer
+                    helm push --force ./customer chartmuseum
                 """
                 script {
                     if (env.PERFORM_RELEASE.equals('true') && !env.RELEASE_VERSION.equals(env.SNAPSHOT_VERSION)) {
