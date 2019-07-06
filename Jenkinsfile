@@ -14,6 +14,7 @@ pipeline {
         VERSION = "${env.BRANCH_NAME == 'master' && !env.LAST_COMMIT_MESSAGE.startsWith('update version to ') ? env.RELEASE_VERSION : env.SNAPSHOT_VERSION}"
         NAMESPACE = "${env.BRANCH_NAME == 'master' ? 'onlineshop' : 'onlineshop-test'}"
         PORT = "${env.BRANCH_NAME == 'master' ? '30002' : '31002'}"
+        HELM_PORT = "${env.BRANCH_NAME == 'master' ? '44134' : '44135'}"
         WILDFLY_PORT_OFFSET = "${env.BRANCH_NAME == 'master' ? '-2078' : '-1978'}"
         WILDFLY_MANAGEMENT_PORT = "${env.BRANCH_NAME == 'master' ? '7912' : '8012'}"
     }
@@ -85,6 +86,12 @@ pipeline {
                     docker tag delivery host.docker.internal:5000/delivery:${env.BRANCH_NAME == 'master' ? 'stable' : 'latest'}
                     docker push host.docker.internal:5000/delivery:${env.VERSION}
                     docker push host.docker.internal:5000/delivery:${env.BRANCH_NAME == 'master' ? 'stable' : 'latest'}
+                """
+                sh """
+                    cd ./helm 
+                    export HELM_HOST=host.docker.internal:${env.HELM_PORT}
+                    helm package ./delivery
+                    helm push --force ./delivery chartmuseum
                 """
                 script {
                     if (env.PERFORM_RELEASE.equals('true') && !env.RELEASE_VERSION.equals(env.SNAPSHOT_VERSION)) {

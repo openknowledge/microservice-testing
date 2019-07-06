@@ -1,0 +1,14 @@
+apiVersion: v1
+name: delivery-db
+version: "1.0.0"
+appVersion: "1.0.0"
+description: Onlineshop implementation for consumer-driven contracts
+keywords:
+- onlineshop
+- workshop
+- consumer-driven contracts
+- delivery-db
+maintainers:
+- name: dag.ennenga
+  email: dag.ennenga@openknowledge.de
+engine: gotpl

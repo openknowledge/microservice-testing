@@ -1,0 +1,26 @@
+#
+# Ability to override the name
+# overrideName: 
+# overrideFullName: 
+
+# Values belonging to delivery application
+app:
+  # Name of the application
+  name: delivery
+  imageTag: "latest"
+  image: "delivery"
+  imageRegistry: "host.docker.internal:5000"
+  imagePullPolicy: "Always"
+  replicas: 1
+  env:
+    - name: ADDRESS_VALIDATION_SERVICE_URL
+      value: http://address-validation:4003
+    - name: DELIVERY_DB_URL
+      value: jdbc:postgresql://delivery-db:5432/delivery
+
+  service:
+    # For minikube, set this to NodePort, elsewhere use LoadBalancer
+    # Use ClusterIP if your setup includes ingress controller
+    serviceType: NodePort
+    internalPort: 4002
+    targetPort: 4002
