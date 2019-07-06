@@ -146,24 +146,36 @@
                 <version>3.1.1</version>
                 <executions>
                     <execution>
+                        <id>unpack-wildfly</id>
                         <phase>process-test-resources</phase>
                         <goals>
                             <goal>unpack</goal>
                         </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.wildfly</groupId>
+                                    <artifactId>wildfly-dist</artifactId>
+                                    <version>${wildfly.version}</version>
+                                    <type>zip</type>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>/tmp</outputDirectory>
+                            <skip>${skipTests}</skip>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-postgresql</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeArtifactIds>postgresql</includeArtifactIds>
+                            <outputDirectory>target/postgresql</outputDirectory>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <artifactItems>
-                        <artifactItem>
-                            <groupId>org.wildfly</groupId>
-                            <artifactId>wildfly-dist</artifactId>
-                            <version>${wildfly.version}</version>
-                            <type>zip</type>
-                        </artifactItem>
-                    </artifactItems>
-                    <outputDirectory>/tmp</outputDirectory>
-                    <skip>${skipTests}</skip>
-                </configuration>
             </plugin>
         </plugins>
     </build>
