@@ -37,14 +37,12 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.jboss.shrinkwrap.resolver.api.maven.PomEquippedResolveStage;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import de.openknowledge.sample.address.application.AddressApplication;
 import de.openknowledge.sample.address.domain.Address;
 
-@Ignore("TODO: configure arquillian provider")
 @RunAsClient
 @RunWith(Arquillian.class)
 public class BillingAddressServiceTest {

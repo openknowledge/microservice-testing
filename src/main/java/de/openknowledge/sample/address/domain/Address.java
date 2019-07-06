@@ -20,6 +20,7 @@ import static org.apache.commons.lang3.Validate.notNull;
 
 import javax.json.bind.annotation.JsonbCreator;
 import javax.json.bind.annotation.JsonbProperty;
+import javax.json.bind.annotation.JsonbTypeAdapter;
 
 public class Address {
     private Recipient recipient;
@@ -37,6 +38,7 @@ public class Address {
         setCity(city);
     }
 
+    @JsonbTypeAdapter(Recipient.Adapter.class)
     public Recipient getRecipient() {
         return recipient;
     }
@@ -49,6 +51,7 @@ public class Address {
         this.street = street;
     }
 
+    @JsonbTypeAdapter(City.Adapter.class)
     public City getCity() {
         return city;
     }

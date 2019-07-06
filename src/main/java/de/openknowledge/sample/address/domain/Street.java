@@ -19,6 +19,7 @@ import static org.apache.commons.lang3.Validate.notNull;
 
 import javax.json.bind.annotation.JsonbCreator;
 import javax.json.bind.annotation.JsonbProperty;
+import javax.json.bind.annotation.JsonbTypeAdapter;
 
 public class Street {
 
@@ -31,10 +32,12 @@ public class Street {
         this.number = notNull(houseNumber, "house number may not be null");
     }
 
+    @JsonbTypeAdapter(StreetName.Adapter.class)
     public StreetName getName() {
         return name;
     }
 
+    @JsonbTypeAdapter(HouseNumber.Adapter.class)
     public HouseNumber getNumber() {
         return number;
     }

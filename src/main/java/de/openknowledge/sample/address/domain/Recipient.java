@@ -27,6 +27,10 @@ public class Recipient {
 
     private String name;
 
+    public static Recipient valueOf(String name) {
+        return new Recipient(name);
+    }
+
     protected Recipient() {
         // for frameworks
     }
