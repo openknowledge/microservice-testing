@@ -36,14 +36,12 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.jboss.shrinkwrap.resolver.api.maven.PomEquippedResolveStage;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import de.openknowledge.sample.address.application.AddressApplication;
 import de.openknowledge.sample.address.domain.Address;
 
-@Ignore("TODO: configure arquillian provider")
 @RunAsClient
 @RunWith(Arquillian.class)
 public class AddressValidationServiceTest {
@@ -58,7 +56,6 @@ public class AddressValidationServiceTest {
                 .addPackage(AddressApplication.class.getPackage())
                 .addPackage(Address.class.getPackage())
                 .addAsLibrary(pomFile.resolve("org.apache.commons:commons-lang3").withTransitivity().asSingleFile())
-                .addAsResource(AddressValidationServiceTest.class.getResource("/project-test.yml"), "project-defaults.yml")
                 .addAsResource(Thread.currentThread().getContextClassLoader().getResource("plz.txt"), "plz.txt");
     }
 
