@@ -16,7 +16,6 @@ pipeline {
         PORT = "${env.BRANCH_NAME == 'master' ? '30003' : '31003'}"
         HELM_PORT = "${env.BRANCH_NAME == 'master' ? '44134' : '44135'}"
         TEST_PORT = "${env.BRANCH_NAME == 'master' ? '6003' : '6103'}"
-        ARQUILLIAN_DAEMON_PORT = "${env.BRANCH_NAME == 'master' ? '12345' : '12346'}"
     }
 
     triggers {
@@ -54,7 +53,7 @@ pipeline {
                 }
             }
             steps {
-                sh "mvn test -Dtest.http.port=${env.TEST_PORT} -Dthorntail.arquillian.daemon.port=${env.ARQUILLIAN_DAEMON_PORT} -B"
+                sh "mvn test -Dtest.http.port=${env.TEST_PORT} -B"
             }
         }
         stage ('Package') {
