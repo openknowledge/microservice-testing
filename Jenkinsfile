@@ -15,6 +15,7 @@ pipeline {
         NAMESPACE = "${env.BRANCH_NAME == 'master' ? 'onlineshop' : 'onlineshop-test'}"
         PORT = "${env.BRANCH_NAME == 'master' ? '30002' : '31002'}"
         HELM_PORT = "${env.BRANCH_NAME == 'master' ? '44134' : '44135'}"
+        TEST_PORT = "${env.BRANCH_NAME == 'master' ? '6002' : '6102'}"
         WILDFLY_PORT_OFFSET = "${env.BRANCH_NAME == 'master' ? '-2078' : '-1978'}"
         WILDFLY_MANAGEMENT_PORT = "${env.BRANCH_NAME == 'master' ? '7912' : '8012'}"
     }
@@ -54,7 +55,7 @@ pipeline {
                 }
             }
             steps {
-                sh "mvn test -Dwildfly.port.offset=${env.WILDFLY_PORT_OFFSET} -Dwildfly.management.port=${env.WILDFLY_MANAGEMENT_PORT} -B"
+                sh "mvn test -Dtest.http.port=${env.TEST_PORT} -Dwildfly.port.offset=${env.WILDFLY_PORT_OFFSET} -Dwildfly.management.port=${env.WILDFLY_MANAGEMENT_PORT} -B"
             }
         }
         stage ('Package') {

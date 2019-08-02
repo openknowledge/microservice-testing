@@ -15,28 +15,14 @@
  */
 package de.openknowledge.sample.address;
 
-import static de.openknowledge.sample.address.JsonObjectComparision.sameAs;
-import static javax.ws.rs.client.Entity.entity;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.IOException;
-import java.io.StringReader;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import org.apache.commons.io.IOUtils;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.arquillian.junit.ArquillianTest;
+import org.jboss.arquillian.junit.ArquillianTestClass;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -46,9 +32,16 @@ import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.jboss.shrinkwrap.resolver.api.maven.PomEquippedResolveStage;
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import au.com.dius.pact.provider.junit.PactRunner;
+import au.com.dius.pact.provider.junit.Provider;
+import au.com.dius.pact.provider.junit.State;
+import au.com.dius.pact.provider.junit.StateChangeAction;
+import au.com.dius.pact.provider.junit.loader.PactFolder;
+import au.com.dius.pact.provider.junit.target.HttpTarget;
+import au.com.dius.pact.provider.junit.target.Target;
+import au.com.dius.pact.provider.junit.target.TestTarget;
 import de.openknowledge.sample.address.application.AddressesApplication;
 import de.openknowledge.sample.address.domain.Address;
 import de.openknowledge.sample.address.infrastructure.ValidationExceptionHandler;
@@ -57,16 +50,22 @@ import de.openknowledge.sample.infrastructure.H2Database;
 import de.openknowledge.sample.infrastructure.H2TestData;
 
 @RunAsClient
-@RunWith(Arquillian.class)
+@RunWith(PactRunner.class)
+@Provider("delivery-service")
+@PactFolder("src/test/pacts")
 public class DeliveryAddressServiceTest {
 
     @ClassRule
     public static H2Database database = new H2Database("delivery").withInitScript("src/main/resources/sql/create.sql");
+    @ClassRule
+    public static ArquillianTestClass arquillianTestClass = new ArquillianTestClass();
     @Rule
-    public H2TestData testdata = new H2TestData(database).withTestdataFile("src/test/sql/data.sql");
+    public ArquillianTest arquillianTest = new ArquillianTest();
+    @Rule
+    public H2TestData testData = new H2TestData(database).withTestdataFile("src/test/sql/data.sql");
 
-    @ArquillianResource
-    private URI uri;
+    @TestTarget
+    public Target target = new HttpTarget("http", "localhost", Integer.valueOf(System.getProperty("test.http.port", "6002")), "/");
 
     @Deployment
     public static WebArchive createDeployment() throws Exception {
@@ -85,91 +84,17 @@ public class DeliveryAddressServiceTest {
                                 StandardCharsets.UTF_8).replace("${database.url}", database.getDatabaseUrl())),
                         "wildfly-ds.xml")
                 .addAsWebInfResource(new StringAsset(Descriptors.create(BeansDescriptor.class)
-                        .createAlternatives().stereotype(CdiMock.class.getName()).up().exportAsString()), "beans.xml");
+                        .createAlternatives().stereotype(CdiMock.class.getName()).up().exportAsString()), "beans.xml")
+                .addAsWebInfResource(new File("src/main/webapp/WEB-INF/jboss-web.xml"), "jboss-web.xml");
     }
 
-    @Test
-    public void getAddress() throws URISyntaxException, SQLException {
-        database.executeScript("src/test/sql/data.sql");
-        JsonObject result = Json.createReader(new StringReader(ClientBuilder.newClient().target(uri)
-                .path("delivery-addresses/0816").request(MediaType.APPLICATION_JSON).get().readEntity(String.class)))
-                .readObject();
-        assertThat(result).is(sameAs(getClass().getResourceAsStream("0816.json")));
+    @State("Three customers")
+    public void setThreeCustomers() {
+        testData.executeScript("src/test/sql/data.sql");
     }
 
-    @Test
-    public void setValidAddress() throws URISyntaxException, IOException {
-        // test
-        Response response = ClientBuilder.newClient().target(uri).path("delivery-addresses/0815")
-                .request(MediaType.APPLICATION_JSON)
-                .post(entity(getClass().getResourceAsStream("0815-new.json"), MediaType.APPLICATION_JSON_TYPE));
-        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
-
-        // post condition
-        JsonObject result = Json.createReader(new StringReader(ClientBuilder.newClient().target(uri)
-                .path("delivery-addresses/0815").request(MediaType.APPLICATION_JSON).get().readEntity(String.class)))
-                .readObject();
-        assertThat(result).is(sameAs(getClass().getResourceAsStream("0815-new.json")));
-    }
-
-    @Test
-    public void dontSetInvalidAddress() throws URISyntaxException {
-        // test
-        JsonObject problem = Json
-                .createReader(
-                        new StringReader(
-                                ClientBuilder.newClient().target(uri).path("delivery-addresses/0816")
-                                        .request(MediaType.APPLICATION_JSON)
-                                        .post(entity(getClass().getResourceAsStream("0816-invalid.json"),
-                                                MediaType.APPLICATION_JSON_TYPE))
-                                        .readEntity(String.class)))
-                .readObject();
-        assertThat(problem).containsEntry("status", Json.createValue(400));
-        assertThat(problem).containsEntry("detail", Json.createValue("City not found"));
-
-        // post condition
-        JsonObject result = Json.createReader(new StringReader(ClientBuilder.newClient().target(uri)
-                .path("delivery-addresses/0816").request(MediaType.APPLICATION_JSON).get().readEntity(String.class)))
-                .readObject();
-        assertThat(result).is(sameAs(getClass().getResourceAsStream("0816.json")));
-    }
-
-    @Test
-    public void setNewAddress() throws URISyntaxException {
-        // pre condition
-        Response notFoundResponse = ClientBuilder.newClient().target(uri).path("delivery-addresses/0817")
-                .request(MediaType.APPLICATION_JSON).get();
-        assertThat(notFoundResponse.getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
-
-        // test
-        Response response = ClientBuilder.newClient().target(uri).path("delivery-addresses/0817")
-                .request(MediaType.APPLICATION_JSON)
-                .post(entity(getClass().getResourceAsStream("0817.json"), MediaType.APPLICATION_JSON_TYPE));
-        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
-
-        // post condition
-        JsonObject result = Json.createReader(new StringReader(ClientBuilder.newClient().target(uri)
-                .path("delivery-addresses/0817").request(MediaType.APPLICATION_JSON).get().readEntity(String.class)))
-                .readObject();
-        assertThat(result).is(sameAs(getClass().getResourceAsStream("0817.json")));
-    }
-
-    @Test
-    public void dontSetInvalidNewAddress() throws URISyntaxException {
-        // pre condition
-        Response notFoundResponse = ClientBuilder.newClient().target(uri).path("delivery-addresses/007")
-                .request(MediaType.APPLICATION_JSON).get();
-        assertThat(notFoundResponse.getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
-
-        // test
-        Response response = ClientBuilder.newClient().target(uri).path("delivery-addresses/007")
-                .request(MediaType.APPLICATION_JSON)
-                .post(entity(getClass().getResourceAsStream("007-invalid.json"), MediaType.APPLICATION_JSON_TYPE));
-        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
-
-        // post condition
-        notFoundResponse = ClientBuilder.newClient().target(uri).path("delivery-addresses/007")
-                .request(MediaType.APPLICATION_JSON).get();
-        assertThat(notFoundResponse.getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
+    @State(value = "Three customers", action = StateChangeAction.TEARDOWN)
+    public void cleanupThreeCustomers() {
+        testData.after();
     }
 }
