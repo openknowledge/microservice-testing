@@ -21,12 +21,15 @@ import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.johnzon.jaxrs.jsonb.jaxrs.JsonbJaxrsProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import de.openknowledge.sample.customer.domain.CustomerNumber;
@@ -41,10 +44,17 @@ public class BillingAddressRepository {
     @ConfigProperty(name = "billing-service.url")
     String billingServiceUrl;
 
+    Client client;
+
+    @PostConstruct
+    public void newClient() {
+        client = ClientBuilder.newClient();
+    }
+
     public Optional<Address> find(CustomerNumber customerNumber) {
         LOG.info("load billing address from " + billingServiceUrl);
-        return Optional.of(ClientBuilder
-                .newClient()
+        return Optional.of(client
+                .register(JsonbJaxrsProvider.class)
                 .target(billingServiceUrl)
                 .path(BILLING_ADDRESSES_PATH)
                 .path(customerNumber.toString())
@@ -57,9 +67,7 @@ public class BillingAddressRepository {
 
     public void update(CustomerNumber customerNumber, Address billingAddress) {
         LOG.info("update billing address at " + billingServiceUrl);
-        ClientBuilder
-                .newClient()
-                .target(billingServiceUrl)
+        client.target(billingServiceUrl)
                 .path(BILLING_ADDRESSES_PATH)
                 .path(customerNumber.toString())
                 .request(MediaType.APPLICATION_JSON)

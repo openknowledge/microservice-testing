@@ -1,7 +1,7 @@
 apiVersion: v1
 name: customer
-version: "1.0.0-SNAPSHOT"
-appVersion: "1.0.0-SNAPSHOT"
+version: "1.1.0-SNAPSHOT"
+appVersion: "1.1.0-SNAPSHOT"
 description: Onlineshop implementation for consumer-driven contracts
 keywords:
 - onlineshop

@@ -22,11 +22,13 @@ import java.io.StringReader;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.validation.ValidationException;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -45,10 +47,16 @@ public class DeliveryAddressRepository {
     @ConfigProperty(name = "delivery-service.url")
     String deliveryServiceUrl;
 
+    Client client;
+
+    @PostConstruct
+    public void newClient() {
+        client = ClientBuilder.newClient();
+    }
+
     public Optional<Address> find(CustomerNumber customerNumber) {
         LOG.info("load delivery address from " + deliveryServiceUrl);
-        return Optional.of(ClientBuilder
-                .newClient()
+        return Optional.of(client
                 .target(deliveryServiceUrl)
                 .path(DELIVERY_ADDRESSES_PATH)
                 .path(customerNumber.toString())
@@ -61,8 +69,7 @@ public class DeliveryAddressRepository {
 
     public void update(CustomerNumber customerNumber, Address deliveryAddress) {
         LOG.info("update delivery address at " + deliveryServiceUrl);
-        Response response = ClientBuilder
-                .newClient()
+        Response response = client
                 .target(deliveryServiceUrl)
                 .path(DELIVERY_ADDRESSES_PATH)
                 .path(customerNumber.toString())
