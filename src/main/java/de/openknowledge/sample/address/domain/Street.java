@@ -19,57 +19,57 @@ import static org.apache.commons.lang3.Validate.notNull;
 
 import javax.json.bind.annotation.JsonbCreator;
 import javax.json.bind.annotation.JsonbProperty;
+import javax.json.bind.annotation.JsonbTypeAdapter;
 
 public class Street {
 
-	private StreetName name;
-	private HouseNumber number;
+    @JsonbTypeAdapter(StreetName.Adapter.class)
+    private StreetName name;
+    @JsonbTypeAdapter(HouseNumber.Adapter.class)
+    private HouseNumber number;
 
-	@JsonbCreator
-	public Street(
-			@JsonbProperty("name") StreetName name,
-			@JsonbProperty("number") HouseNumber houseNumber
-	) {
+    @JsonbCreator
+    public Street(@JsonbProperty("name") StreetName name, @JsonbProperty("number") HouseNumber houseNumber) {
         this.name = notNull(name, "name may not be null");
         this.number = notNull(houseNumber, "house number may not be null");
     }
 
-	public StreetName getName() {
-		return name;
-	}
+    public StreetName getName() {
+        return name;
+    }
 
-	public HouseNumber getNumber() {
-		return number;
-	}
+    public HouseNumber getNumber() {
+        return number;
+    }
 
-	@Override
-	public int hashCode() {
-		return name.hashCode() ^ number.hashCode();
-	}
+    @Override
+    public int hashCode() {
+        return name.hashCode() ^ number.hashCode();
+    }
 
-	@Override
-	public boolean equals(Object object) {
-		if (this == object) {
-			return true;
-		}
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
 
-		if (!(object instanceof Street)) {
-			return false;
-		}
+        if (!(object instanceof Street)) {
+            return false;
+        }
 
-		Street street = (Street) object;
+        Street street = (Street) object;
 
-		return name.equals(street.getName()) && number.equals(street.getNumber());
-	}
+        return name.equals(street.getName()) && number.equals(street.getNumber());
+    }
 
-	@Override
-	public String toString() {
-	    if (isEnglish()) {
-	        return number + " " + name;
-	    } else {
-	        return name + " " + number;
-	    }
-	}
+    @Override
+    public String toString() {
+        if (isEnglish()) {
+            return number + " " + name;
+        } else {
+            return name + " " + number;
+        }
+    }
 
     private boolean isEnglish() {
         return name.toString().toLowerCase().contains("street");

@@ -27,6 +27,10 @@ public class CustomerName {
 
     private String name;
 
+    public static CustomerName valueOf(String value) {
+        return new CustomerName(value);
+    }
+
     protected CustomerName() {
         // for frameworks
     }

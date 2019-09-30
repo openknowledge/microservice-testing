@@ -26,6 +26,10 @@ import static org.apache.commons.lang3.Validate.notBlank;
 public class HouseNumber {
     private String number;
 
+    public static HouseNumber valueOf(String number) {
+        return new HouseNumber(number);
+    }
+
     protected HouseNumber() {
         // for frameworks
     }

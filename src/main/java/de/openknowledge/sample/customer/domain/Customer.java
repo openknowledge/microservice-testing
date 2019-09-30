@@ -19,18 +19,21 @@ import static org.apache.commons.lang3.Validate.notNull;
 
 import javax.json.bind.annotation.JsonbCreator;
 import javax.json.bind.annotation.JsonbProperty;
+import javax.json.bind.annotation.JsonbTypeAdapter;
 
 import de.openknowledge.sample.address.domain.Address;
 
 public class Customer {
 
-	CustomerNumber number;
-	private CustomerName name;
-	private Address billingAddress;
-	private Address deliveryAddress;
+    @JsonbTypeAdapter(CustomerNumber.Adapter.class)
+    CustomerNumber number;
+    @JsonbTypeAdapter(CustomerName.Adapter.class)
+    private CustomerName name;
+    private Address billingAddress;
+    private Address deliveryAddress;
 
-	@JsonbCreator
-	public Customer(@JsonbProperty("name") CustomerName name) {
+    @JsonbCreator
+    public Customer(@JsonbProperty("name") CustomerName name) {
         this.name = notNull(name, "name may not be null");
     }
 
@@ -39,15 +42,15 @@ public class Customer {
         this.number = notNull(number, "number may not be null");
     }
 
-	public CustomerName getName() {
-		return name;
-	}
+    public CustomerName getName() {
+        return name;
+    }
 
-	public CustomerNumber getNumber() {
-		return number;
-	}
+    public CustomerNumber getNumber() {
+        return number;
+    }
 
-	@JsonbProperty(nillable = false)
+    @JsonbProperty(nillable = false)
     public Address getBillingAddress() {
         return billingAddress;
     }
@@ -72,27 +75,27 @@ public class Customer {
     }
 
     @Override
-	public int hashCode() {
-		return name.hashCode() ^ number.hashCode();
-	}
+    public int hashCode() {
+        return name.hashCode() ^ number.hashCode();
+    }
 
-	@Override
-	public boolean equals(Object object) {
-		if (this == object) {
-			return true;
-		}
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
 
-		if (!(object instanceof Customer)) {
-			return false;
-		}
+        if (!(object instanceof Customer)) {
+            return false;
+        }
 
-		Customer customer = (Customer) object;
+        Customer customer = (Customer) object;
 
-		return name.equals(customer.getName()) && number.equals(customer.getNumber());
-	}
+        return name.equals(customer.getName()) && number.equals(customer.getNumber());
+    }
 
-	@Override
-	public String toString() {
-	    return name + "(" + number + ")";
-	}
+    @Override
+    public String toString() {
+        return name + "(" + number + ")";
+    }
 }

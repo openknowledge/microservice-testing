@@ -16,6 +16,7 @@
 package de.openknowledge.sample.address.domain;
 
 import static javax.ws.rs.client.Entity.entity;
+import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
 import java.io.StringReader;
 import java.util.Optional;
@@ -53,6 +54,7 @@ public class DeliveryAddressRepository {
                 .path(customerNumber.toString())
                 .request(MediaType.APPLICATION_JSON)
                 .get())
+                .filter(r -> r.getStatusInfo().getFamily() == SUCCESSFUL)
                 .filter(Response::hasEntity)
                 .map(r -> r.readEntity(Address.class));
     }

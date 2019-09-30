@@ -16,6 +16,7 @@
 package de.openknowledge.sample.address.domain;
 
 import static javax.ws.rs.client.Entity.entity;
+import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -49,6 +50,7 @@ public class BillingAddressRepository {
                 .path(customerNumber.toString())
                 .request(MediaType.APPLICATION_JSON)
                 .get())
+                .filter(r -> r.getStatusInfo().getFamily() == SUCCESSFUL)
                 .filter(Response::hasEntity)
                 .map(r -> r.readEntity(Address.class));
     }

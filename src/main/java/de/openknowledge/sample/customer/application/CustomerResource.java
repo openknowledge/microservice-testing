@@ -51,24 +51,24 @@ import de.openknowledge.sample.customer.domain.CustomerRepository;
 @Produces(MediaType.APPLICATION_JSON)
 public class CustomerResource {
 
-	private final static Logger LOG = Logger.getLogger(CustomerResource.class.getSimpleName());
+    private final static Logger LOG = Logger.getLogger(CustomerResource.class.getSimpleName());
 
-	@Inject
-	private CustomerRepository customerRepository;
-	@Inject
-	private BillingAddressRepository billingAddressRepository;
-	@Inject
-	private DeliveryAddressRepository deliveryAddressRepository;
+    @Inject
+    private CustomerRepository customerRepository;
+    @Inject
+    private BillingAddressRepository billingAddressRepository;
+    @Inject
+    private DeliveryAddressRepository deliveryAddressRepository;
 
-	@GET
-	@Path("/")
-	@Produces(MediaType.APPLICATION_JSON)
-	public List<Customer> getCustomers() {
-		LOG.info("RESTful call 'GET all customers'");
-		return customerRepository.findAll();
-	}
+    @GET
+    @Path("/")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Customer> getCustomers() {
+        LOG.info("RESTful call 'GET all customers'");
+        return customerRepository.findAll();
+    }
 
-	@POST
+    @POST
     @Path("/")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createCustomer(Customer customer, @Context UriInfo uri) throws URISyntaxException {
@@ -77,7 +77,7 @@ public class CustomerResource {
         return Response.created(uri.getAbsolutePathBuilder().path(customer.getNumber().toString()).build()).build();
     }
 
-	@GET
+    @GET
     @Path("/{customerNumber}")
     @Produces(MediaType.APPLICATION_JSON)
     public Customer getCustomer(@PathParam("customerNumber") CustomerNumber customerNumber) {
@@ -88,19 +88,20 @@ public class CustomerResource {
         return customer;
     }
 
-	@PUT
+    @PUT
     @Path("/{customerNumber}/billing-address")
     @Produces(MediaType.APPLICATION_JSON)
     public void setBillingAddress(@PathParam("customerNumber") CustomerNumber customerNumber, Address billingAddress) {
         LOG.info("RESTful call 'PUT billing address'");
         customerRepository.find(customerNumber).orElseThrow(customerNotFound(customerNumber));
         billingAddressRepository.update(customerNumber, billingAddress);
-	}
+    }
 
     @PUT
     @Path("/{customerNumber}/delivery-address")
     @Produces(MediaType.APPLICATION_JSON)
-    public void setDeliveryAddress(@PathParam("customerNumber") CustomerNumber customerNumber, Address deliveryAddress) {
+    public void setDeliveryAddress(@PathParam("customerNumber") CustomerNumber customerNumber,
+            Address deliveryAddress) {
         LOG.info("RESTful call 'PUT delivery address'");
         customerRepository.find(customerNumber).orElseThrow(customerNotFound(customerNumber));
         deliveryAddressRepository.update(customerNumber, deliveryAddress);

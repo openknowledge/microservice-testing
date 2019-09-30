@@ -36,18 +36,21 @@ public class CustomerRepository {
 
     private static final Logger LOGGER = Logger.getLogger(CustomerRepository.class.getSimpleName());
     private static final AtomicInteger CUSTOMER_NUMBERS = new AtomicInteger(0);
-    
-	private Map<CustomerNumber, Customer> customers;
 
-	@PostConstruct
-	public void initialize() {
+    private Map<CustomerNumber, Customer> customers;
 
-	    customers = new ConcurrentHashMap<>();
-	    customers.put(new CustomerNumber("0815"), new Customer(new CustomerNumber("0815"), new CustomerName("Max Mustermann")));
-        customers.put(new CustomerNumber("0816"), new Customer(new CustomerNumber("0816"), new CustomerName("Erika Mustermann")));
-        customers.put(new CustomerNumber("007"), new Customer(new CustomerNumber("007"), new CustomerName("James Bond")));
-		LOGGER.info(format("customer repository initialized with %d customers: ", customers.size()));
-	}
+    @PostConstruct
+    public void initialize() {
+
+        customers = new ConcurrentHashMap<>();
+        customers.put(new CustomerNumber("0815"),
+                new Customer(new CustomerNumber("0815"), new CustomerName("Max Mustermann")));
+        customers.put(new CustomerNumber("0816"),
+                new Customer(new CustomerNumber("0816"), new CustomerName("Erika Mustermann")));
+        customers.put(new CustomerNumber("007"),
+                new Customer(new CustomerNumber("007"), new CustomerName("James Bond")));
+        LOGGER.info(format("customer repository initialized with %d customers: ", customers.size()));
+    }
 
     public List<Customer> findAll() {
         return customers.values().stream().map(Customer::clearAddresses).collect(toList());

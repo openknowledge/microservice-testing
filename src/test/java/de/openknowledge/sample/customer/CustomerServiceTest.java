@@ -38,6 +38,7 @@ import javax.ws.rs.core.Response;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -45,7 +46,6 @@ import org.jboss.shrinkwrap.descriptor.api.Descriptors;
 import org.jboss.shrinkwrap.descriptor.api.beans11.BeansDescriptor;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.jboss.shrinkwrap.resolver.api.maven.PomEquippedResolveStage;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -58,13 +58,12 @@ import de.openknowledge.sample.customer.domain.Customer;
 import de.openknowledge.sample.customer.domain.CustomerNumber;
 import de.openknowledge.sample.infrastructure.CdiMock;
 
-@Ignore("TODO: configure arquillian provider")
 @RunAsClient
 @RunWith(Arquillian.class)
 public class CustomerServiceTest {
 
-    //@ArquillianResource
-    private URI uri = URI.create("http://localhost:" + System.getProperty("test.http.port", "6000"));
+    @ArquillianResource
+    private URI uri;
 
     @Deployment
     public static WebArchive createDeployment() throws Exception {

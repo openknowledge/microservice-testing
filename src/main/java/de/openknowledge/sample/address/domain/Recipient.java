@@ -15,17 +15,21 @@
  */
 package de.openknowledge.sample.address.domain;
 
+import static org.apache.commons.lang3.Validate.notBlank;
+
 import javax.json.bind.adapter.JsonbAdapter;
 import javax.json.bind.annotation.JsonbTypeAdapter;
 
 import de.openknowledge.sample.address.domain.Recipient.Adapter;
 
-import static org.apache.commons.lang3.Validate.notBlank;
-
 @JsonbTypeAdapter(Adapter.class)
 public class Recipient {
 
     private String name;
+
+    public static Recipient valueOf(String name) {
+        return new Recipient(name);
+    }
 
     protected Recipient() {
         // for frameworks
