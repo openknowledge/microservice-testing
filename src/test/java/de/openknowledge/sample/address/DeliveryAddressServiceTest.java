@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 
 import javax.json.Json;
@@ -31,6 +32,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.io.IOUtils;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
@@ -43,7 +45,6 @@ import org.jboss.shrinkwrap.descriptor.api.beans11.BeansDescriptor;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.jboss.shrinkwrap.resolver.api.maven.PomEquippedResolveStage;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,7 +56,6 @@ import de.openknowledge.sample.infrastructure.CdiMock;
 import de.openknowledge.sample.infrastructure.H2Database;
 import de.openknowledge.sample.infrastructure.H2TestData;
 
-@Ignore("TODO: configure arquillian provider")
 @RunAsClient
 @RunWith(Arquillian.class)
 public class DeliveryAddressServiceTest {
@@ -71,31 +71,28 @@ public class DeliveryAddressServiceTest {
     @Deployment
     public static WebArchive createDeployment() throws Exception {
         PomEquippedResolveStage pomFile = Maven.resolver().loadPomFromFile("pom.xml");
-        return ShrinkWrap.create(WebArchive.class)
-                .addPackage(AddressesApplication.class.getPackage())
-                .addPackage(Address.class.getPackage())
-                .addPackage(ValidationExceptionHandler.class.getPackage())
+        return ShrinkWrap.create(WebArchive.class).addPackage(AddressesApplication.class.getPackage())
+                .addPackage(Address.class.getPackage()).addPackage(ValidationExceptionHandler.class.getPackage())
                 .addClasses(CdiMock.class, AddressValidationServiceMock.class)
                 .addAsLibraries(pomFile.resolve("org.apache.commons:commons-lang3").withoutTransitivity().asFile())
                 .addAsLibraries(pomFile.resolve("com.h2database:h2").withoutTransitivity().asFile())
                 .addAsLibraries(pomFile.resolve("org.mockito:mockito-core").withTransitivity().asFile())
-                .addAsManifestResource(Address.class.getResource("/META-INF/microprofile-config.properties"), "microprofile-config.properties")
                 .addAsResource(Address.class.getResource("/META-INF/persistence.xml"), "META-INF/persistence.xml")
+                .addAsManifestResource(Address.class.getResource("/META-INF/microprofile-config.properties"), "microprofile-config.properties")
+                .addAsManifestResource(
+                        new StringAsset(
+                                IOUtils.toString(DeliveryAddressServiceTest.class.getResource("/h2-ds.xml"),
+                                StandardCharsets.UTF_8).replace("${database.url}", database.getDatabaseUrl())),
+                        "wildfly-ds.xml")
                 .addAsWebInfResource(new StringAsset(Descriptors.create(BeansDescriptor.class)
-                        .createAlternatives().stereotype(CdiMock.class.getName()).up()
-                        .exportAsString()), "beans.xml");
+                        .createAlternatives().stereotype(CdiMock.class.getName()).up().exportAsString()), "beans.xml");
     }
-    
+
     @Test
     public void getAddress() throws URISyntaxException, SQLException {
         database.executeScript("src/test/sql/data.sql");
-        JsonObject result = Json.createReader(new StringReader(ClientBuilder
-                .newClient()
-                .target(uri)
-                .path("delivery-addresses/0816")
-                .request(MediaType.APPLICATION_JSON)
-                .get()
-                .readEntity(String.class)))
+        JsonObject result = Json.createReader(new StringReader(ClientBuilder.newClient().target(uri)
+                .path("delivery-addresses/0816").request(MediaType.APPLICATION_JSON).get().readEntity(String.class)))
                 .readObject();
         assertThat(result).is(sameAs(getClass().getResourceAsStream("0816.json")));
     }
@@ -103,22 +100,14 @@ public class DeliveryAddressServiceTest {
     @Test
     public void setValidAddress() throws URISyntaxException, IOException {
         // test
-        Response response = ClientBuilder
-                .newClient()
-                .target(uri)
-                .path("delivery-addresses/0815")
+        Response response = ClientBuilder.newClient().target(uri).path("delivery-addresses/0815")
                 .request(MediaType.APPLICATION_JSON)
                 .post(entity(getClass().getResourceAsStream("0815-new.json"), MediaType.APPLICATION_JSON_TYPE));
         assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
-        
+
         // post condition
-        JsonObject result = Json.createReader(new StringReader(ClientBuilder
-                .newClient()
-                .target(uri)
-                .path("delivery-addresses/0815")
-                .request(MediaType.APPLICATION_JSON)
-                .get()
-                .readEntity(String.class)))
+        JsonObject result = Json.createReader(new StringReader(ClientBuilder.newClient().target(uri)
+                .path("delivery-addresses/0815").request(MediaType.APPLICATION_JSON).get().readEntity(String.class)))
                 .readObject();
         assertThat(result).is(sameAs(getClass().getResourceAsStream("0815-new.json")));
     }
@@ -126,25 +115,21 @@ public class DeliveryAddressServiceTest {
     @Test
     public void dontSetInvalidAddress() throws URISyntaxException {
         // test
-        JsonObject problem = Json.createReader(new StringReader(ClientBuilder
-                .newClient()
-                .target(uri)
-                .path("delivery-addresses/0816")
-                .request(MediaType.APPLICATION_JSON)
-                .post(entity(getClass().getResourceAsStream("0816-invalid.json"), MediaType.APPLICATION_JSON_TYPE))
-                .readEntity(String.class)))
+        JsonObject problem = Json
+                .createReader(
+                        new StringReader(
+                                ClientBuilder.newClient().target(uri).path("delivery-addresses/0816")
+                                        .request(MediaType.APPLICATION_JSON)
+                                        .post(entity(getClass().getResourceAsStream("0816-invalid.json"),
+                                                MediaType.APPLICATION_JSON_TYPE))
+                                        .readEntity(String.class)))
                 .readObject();
         assertThat(problem).containsEntry("status", Json.createValue(400));
         assertThat(problem).containsEntry("detail", Json.createValue("City not found"));
-        
+
         // post condition
-        JsonObject result = Json.createReader(new StringReader(ClientBuilder
-                .newClient()
-                .target(uri)
-                .path("delivery-addresses/0816")
-                .request(MediaType.APPLICATION_JSON)
-                .get()
-                .readEntity(String.class)))
+        JsonObject result = Json.createReader(new StringReader(ClientBuilder.newClient().target(uri)
+                .path("delivery-addresses/0816").request(MediaType.APPLICATION_JSON).get().readEntity(String.class)))
                 .readObject();
         assertThat(result).is(sameAs(getClass().getResourceAsStream("0816.json")));
     }
@@ -152,31 +137,19 @@ public class DeliveryAddressServiceTest {
     @Test
     public void setNewAddress() throws URISyntaxException {
         // pre condition
-        Response notFoundResponse = ClientBuilder
-                .newClient()
-                .target(uri)
-                .path("delivery-addresses/0817")
-                .request(MediaType.APPLICATION_JSON)
-                .get();
+        Response notFoundResponse = ClientBuilder.newClient().target(uri).path("delivery-addresses/0817")
+                .request(MediaType.APPLICATION_JSON).get();
         assertThat(notFoundResponse.getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
 
         // test
-        Response response = ClientBuilder
-                .newClient()
-                .target(uri)
-                .path("delivery-addresses/0817")
+        Response response = ClientBuilder.newClient().target(uri).path("delivery-addresses/0817")
                 .request(MediaType.APPLICATION_JSON)
                 .post(entity(getClass().getResourceAsStream("0817.json"), MediaType.APPLICATION_JSON_TYPE));
         assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
 
         // post condition
-        JsonObject result = Json.createReader(new StringReader(ClientBuilder
-                .newClient()
-                .target(uri)
-                .path("delivery-addresses/0817")
-                .request(MediaType.APPLICATION_JSON)
-                .get()
-                .readEntity(String.class)))
+        JsonObject result = Json.createReader(new StringReader(ClientBuilder.newClient().target(uri)
+                .path("delivery-addresses/0817").request(MediaType.APPLICATION_JSON).get().readEntity(String.class)))
                 .readObject();
         assertThat(result).is(sameAs(getClass().getResourceAsStream("0817.json")));
     }
@@ -184,30 +157,19 @@ public class DeliveryAddressServiceTest {
     @Test
     public void dontSetInvalidNewAddress() throws URISyntaxException {
         // pre condition
-        Response notFoundResponse = ClientBuilder
-                .newClient()
-                .target(uri)
-                .path("delivery-addresses/007")
-                .request(MediaType.APPLICATION_JSON)
-                .get();
+        Response notFoundResponse = ClientBuilder.newClient().target(uri).path("delivery-addresses/007")
+                .request(MediaType.APPLICATION_JSON).get();
         assertThat(notFoundResponse.getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
 
         // test
-        Response response = ClientBuilder
-                .newClient()
-                .target(uri)
-                .path("delivery-addresses/007")
+        Response response = ClientBuilder.newClient().target(uri).path("delivery-addresses/007")
                 .request(MediaType.APPLICATION_JSON)
                 .post(entity(getClass().getResourceAsStream("007-invalid.json"), MediaType.APPLICATION_JSON_TYPE));
         assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
-        
+
         // post condition
-        notFoundResponse = ClientBuilder
-                .newClient()
-                .target(uri)
-                .path("delivery-addresses/007")
-                .request(MediaType.APPLICATION_JSON)
-                .get();
+        notFoundResponse = ClientBuilder.newClient().target(uri).path("delivery-addresses/007")
+                .request(MediaType.APPLICATION_JSON).get();
         assertThat(notFoundResponse.getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
     }
 }

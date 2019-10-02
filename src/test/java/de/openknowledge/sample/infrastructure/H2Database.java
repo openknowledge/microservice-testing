@@ -51,7 +51,7 @@ public class H2Database extends ExternalResource {
     }
 
     public String getDatabaseUrl() {
-        return "jdbc:h2:" + database.getURL() + "/~/" + databaseName;
+        return "jdbc:h2:tcp://localhost:" + database.getPort() + "/~/" + databaseName;
     }
 
     public void executeScript(String file) throws SQLException {
