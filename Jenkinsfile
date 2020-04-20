@@ -147,6 +147,8 @@ pipeline {
                 }
             }
             steps {
+                sh "curl -H 'Content-Type: application/json' -X PUT http://host.docker.internal/pacticipants/address-validation-service/versions/${env.VERSION}/tags/${env.STAGE}"
+                sh "curl -X DELETE http://host.docker.internal/pacticipants/address-validation-service/versions/${env.VERSION}/tags/pending-${env.STAGE}"
                 sh """
                     helm repo update
                     helm upgrade --install address-validation --set app.imageTag=${env.VERSION} --set app.service.targetPort=${env.PORT} --namespace=${env.NAMESPACE} chartmuseum/address-validation --version=${env.VERSION}
