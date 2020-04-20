@@ -19,6 +19,7 @@ pipeline {
         ROOT_DIRECTORY = "${params.verifyPacts == true && env.BRANCH_NAME == 'master' && env.SNAPSHOT_VERSION.endsWith("-SNAPSHOT") ? 'target/checkout' : '.'}"
         NAMESPACE = "${env.BRANCH_NAME == 'master' ? 'onlineshop' : 'onlineshop-test'}"
         PORT = "${env.BRANCH_NAME == 'master' ? '30003' : '31003'}"
+        STAGE = "${env.BRANCH_NAME == 'master' ? 'prod' : 'test'}"
     }
 
     triggers {
@@ -74,7 +75,7 @@ pipeline {
             steps {
                 sh """
                     cd ${ROOT_DIRECTORY}
-                    mvn test -DpactBroker.url=http://host.docker.internal -B
+                    mvn test -DpactBroker.url=http://host.docker.internal -Dpact.tag=${params.verifyPacts ? 'pending-' + env.STAGE : env.STAGE} -B
                 """
             }
         }
@@ -150,6 +151,8 @@ pipeline {
                     helm repo update
                     helm upgrade --install address-validation --set app.imageTag=${env.VERSION} --set app.service.targetPort=${env.PORT} --namespace=${env.NAMESPACE} chartmuseum/address-validation --version=${env.VERSION}
                 """
+                sh "curl -H 'Content-Type: application/json' -X PUT http://host.docker.internal/pacticipants/address-validation-service/versions/${env.VERSION}/tags/${env.STAGE}"
+                sh "curl -X DELETE http://host.docker.internal/pacticipants/address-validation-service/versions/${env.VERSION}/tags/pending-${env.STAGE}"
             }
         }
     }
