@@ -14,7 +14,6 @@ pipeline {
         VERSION = "${env.BRANCH_NAME == 'master' && !env.LAST_COMMIT_MESSAGE.startsWith('update version to ') ? env.RELEASE_VERSION : env.SNAPSHOT_VERSION}"
         NAMESPACE = "${env.BRANCH_NAME == 'master' ? 'onlineshop' : 'onlineshop-test'}"
         PORT = "${env.BRANCH_NAME == 'master' ? '30003' : '31003'}"
-        HELM_PORT = "${env.BRANCH_NAME == 'master' ? '44134' : '44135'}"
         TEST_PORT = "${env.BRANCH_NAME == 'master' ? '6003' : '6103'}"
     }
 
@@ -88,9 +87,8 @@ pipeline {
                 """
                 sh """
                     cd ./helm 
-                    export HELM_HOST=host.docker.internal:${env.HELM_PORT}
                     helm package ./address-validation
-                    helm push --force ./address-validation chartmuseum
+                    helm cm-push --force ./address-validation chartmuseum
                 """
                 script {
                     if (env.PERFORM_RELEASE.equals('true') && !env.RELEASE_VERSION.equals(env.SNAPSHOT_VERSION)) {
@@ -115,15 +113,8 @@ pipeline {
             }
             steps {
                 sh """
-                    set +e
-                    export HELM_HOST=host.docker.internal:${env.HELM_PORT}
                     helm repo update
-                    helm upgrade address-validation --set app.imageTag=${env.VERSION} --set app.service.targetPort=${env.PORT} --namespace ${env.NAMESPACE} chartmuseum/address-validation --version=${env.VERSION}
-                    if [ \$? -ne 0 ]
-                    then
-                        set -e
-                        helm install --name address-validation --set app.imageTag=${env.VERSION} --set app.service.targetPort=${env.PORT} --namespace ${env.NAMESPACE} chartmuseum/address-validation --version=${env.VERSION}
-                    fi
+                    helm upgrade --install address-validation --set app.imageTag=${env.VERSION} --set app.service.targetPort=${env.PORT} --namespace=${env.NAMESPACE} chartmuseum/address-validation --version=${env.VERSION}
                 """
             }
         }

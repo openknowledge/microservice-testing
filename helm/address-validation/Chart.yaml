@@ -4,11 +4,11 @@ version: "1.1.0-SNAPSHOT"
 appVersion: "1.1.0-SNAPSHOT"
 description: Onlineshop implementation for consumer-driven contracts
 keywords:
-- onlineshop
-- workshop
-- consumer-driven contracts
-- address-validation
+  - onlineshop
+  - workshop
+  - consumer-driven contracts
+  - address-validation
 maintainers:
-- name: dag.ennenga
-  email: dag.ennenga@openknowledge.de
+  - name: dag.ennenga
+    email: dag.ennenga@openknowledge.de
 engine: gotpl
