@@ -72,9 +72,9 @@
         </dependency>
 
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.7.0-RC1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -130,14 +130,14 @@
         </dependency>
         <dependency>
             <groupId>au.com.dius</groupId>
-            <artifactId>pact-jvm-consumer-junit_2.12</artifactId>
-            <version>3.6.7</version>
+            <artifactId>pact-jvm-consumer-junit</artifactId>
+            <version>4.0.10</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>au.com.dius</groupId>
-            <artifactId>pact-jvm-provider-junit_2.12</artifactId>
-            <version>3.6.7</version>
+            <artifactId>pact-jvm-provider-junit</artifactId>
+            <version>4.0.10</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -180,7 +180,7 @@
                                 </artifactItem>
                             </artifactItems>
                             <outputDirectory>/tmp</outputDirectory>
-                            <skip>${skipTests}</skip>
+
                         </configuration>
                     </execution>
                     <execution>

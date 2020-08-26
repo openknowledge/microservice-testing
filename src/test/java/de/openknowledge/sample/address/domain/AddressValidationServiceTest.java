@@ -6,21 +6,22 @@ import java.io.IOException;
 
 import javax.validation.ValidationException;
 
+import au.com.dius.pact.consumer.junit.PactProviderRule;
+import au.com.dius.pact.consumer.junit.PactVerification;
+import au.com.dius.pact.core.model.RequestResponsePact;
+import au.com.dius.pact.core.model.annotations.Pact;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import au.com.dius.pact.consumer.Pact;
-import au.com.dius.pact.consumer.PactProviderRuleMk2;
-import au.com.dius.pact.consumer.PactVerification;
+
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
-import au.com.dius.pact.model.RequestResponsePact;
 
 public class AddressValidationServiceTest {
 
     @Rule
-    public PactProviderRuleMk2 mockProvider = new PactProviderRuleMk2("address-validation-service", "localhost", Integer.valueOf(System.getProperty("test.http.port", "6000")), this);
+    public PactProviderRule mockProvider = new PactProviderRule("address-validation-service", this);
 
     private AddressValidationService service;
 
@@ -69,7 +70,8 @@ public class AddressValidationServiceTest {
     @Before
     public void initializeService() {
         service = new AddressValidationService();
-        service.addressValidationServiceUrl = "http://localhost:" + System.getProperty("test.http.port", "6000");
+        //service.addressValidationServiceUrl = "http://localhost:" + System.getProperty("test.http.port", "6000");
+        service.addressValidationServiceUrl = "http://localhost:" + mockProvider.getPort();
     }
 
     @Test
