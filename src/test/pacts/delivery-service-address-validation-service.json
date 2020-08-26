@@ -7,7 +7,7 @@
   },
   "interactions": [
     {
-      "description": "POST request for Max\u0027s address",
+      "description": "POST request for Max's address",
       "request": {
         "method": "POST",
         "path": "/valid-addresses",
@@ -46,7 +46,7 @@
       ]
     },
     {
-      "description": "POST request for Sherlock\u0027s address",
+      "description": "POST request for Sherlock's address",
       "request": {
         "method": "POST",
         "path": "/valid-addresses",
@@ -120,7 +120,7 @@
       "version": "3.0.0"
     },
     "pact-jvm": {
-      "version": "3.6.7"
+      "version": "4.0.10"
     }
   }
 }
