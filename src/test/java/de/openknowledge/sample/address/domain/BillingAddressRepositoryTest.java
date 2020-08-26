@@ -22,23 +22,24 @@ import java.util.Optional;
 
 import javax.ws.rs.client.ClientBuilder;
 
+import au.com.dius.pact.consumer.junit.PactProviderRule;
+import au.com.dius.pact.consumer.junit.PactVerification;
+import au.com.dius.pact.core.model.RequestResponsePact;
+import au.com.dius.pact.core.model.annotations.Pact;
 import org.apache.johnzon.jaxrs.jsonb.jaxrs.JsonbJaxrsProvider;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import au.com.dius.pact.consumer.Pact;
-import au.com.dius.pact.consumer.PactProviderRuleMk2;
-import au.com.dius.pact.consumer.PactVerification;
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
-import au.com.dius.pact.model.RequestResponsePact;
 import de.openknowledge.sample.customer.domain.CustomerNumber;
 
 public class BillingAddressRepositoryTest {
 
     @Rule
-    public PactProviderRuleMk2 mockProvider = new PactProviderRuleMk2("billing-service", this);
+    public PactProviderRule mockProvider = new PactProviderRule("billing-service", this);
+
 
     private BillingAddressRepository repository;
 
