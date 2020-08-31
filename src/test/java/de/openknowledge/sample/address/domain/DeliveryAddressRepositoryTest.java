@@ -24,23 +24,23 @@ import java.util.Optional;
 import javax.validation.ValidationException;
 import javax.ws.rs.client.ClientBuilder;
 
-import au.com.dius.pact.consumer.junit.PactProviderRule;
-import au.com.dius.pact.consumer.junit.PactVerification;
+import au.com.dius.pact.consumer.MockServer;
+import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
+import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import org.apache.johnzon.jaxrs.jsonb.jaxrs.JsonbJaxrsProvider;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
 
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import de.openknowledge.sample.customer.domain.CustomerNumber;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
+@ExtendWith(PactConsumerTestExt.class)
+@PactTestFor(providerName = "delivery-service")
 public class DeliveryAddressRepositoryTest {
-
-    @Rule
-    public PactProviderRule mockProvider = new PactProviderRule("delivery-service", this);
 
     private DeliveryAddressRepository repository;
 
@@ -117,15 +117,15 @@ public class DeliveryAddressRepositoryTest {
           .toPact();
     }
 
-    @Before
-    public void initializeRepository() {
+    @BeforeEach
+    public void initializeRepository(MockServer mockServer) {
         repository = new DeliveryAddressRepository();
-        repository.deliveryServiceUrl = "http://localhost:" + mockProvider.getPort();
+        repository.deliveryServiceUrl = "http://localhost:" + mockServer.getPort();
         repository.client = ClientBuilder.newClient().register(JsonbJaxrsProvider.class);
     }
 
+    @PactTestFor(pactMethod = "getMax")
     @Test
-    @PactVerification(fragment = "getMax")
     public void findDeliveryAddressForExistingCustomer() {
         Optional<Address> address = repository.find(new CustomerNumber("0815"));
         assertThat(address).isPresent().contains(
@@ -135,15 +135,15 @@ public class DeliveryAddressRepositoryTest {
                         new City("26122 Oldenburg")));
     }
 
+    @PactTestFor(pactMethod = "dontGetMissing")
     @Test
-    @PactVerification(fragment = "dontGetMissing")
     public void dontFindNonExistingAddress() {
         Optional<Address> address = repository.find(new CustomerNumber("0817"));
         assertThat(address).isNotPresent();
     }
 
+    @PactTestFor(pactMethod = "updateMax")
     @Test
-    @PactVerification(fragment = "updateMax")
     public void updateAddress() {
         repository.update(new CustomerNumber("0815"), new Address(
                 new Recipient("Erika Mustermann"),
@@ -151,8 +151,8 @@ public class DeliveryAddressRepositoryTest {
                 new City("45127 Essen")));
     }
 
+    @PactTestFor(pactMethod = "dontUpdateSherlock")
     @Test
-    @PactVerification(fragment = "dontUpdateSherlock")
     public void dontUpdateInvalidAddress() {
         assertThatThrownBy(() -> 
             repository.update(new CustomerNumber("007"), new Address(
