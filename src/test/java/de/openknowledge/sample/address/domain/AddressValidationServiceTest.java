@@ -6,22 +6,21 @@ import java.io.IOException;
 
 import javax.validation.ValidationException;
 
-import au.com.dius.pact.consumer.junit.PactProviderRule;
-import au.com.dius.pact.consumer.junit.PactVerification;
+import au.com.dius.pact.consumer.MockServer;
+import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
+import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
+@ExtendWith(PactConsumerTestExt.class)
+@PactTestFor(providerName = "address-validation-service")
 public class AddressValidationServiceTest {
-
-    @Rule
-    public PactProviderRule mockProvider = new PactProviderRule("address-validation-service", this);
 
     private AddressValidationService service;
 
@@ -67,15 +66,14 @@ public class AddressValidationServiceTest {
           .toPact();
     }
 
-    @Before
-    public void initializeService() {
+    @BeforeEach
+    public void initializeService(MockServer mockServer) {
         service = new AddressValidationService();
-        //service.addressValidationServiceUrl = "http://localhost:" + System.getProperty("test.http.port", "6000");
-        service.addressValidationServiceUrl = "http://localhost:" + mockProvider.getPort();
+        service.addressValidationServiceUrl = "http://localhost:" + mockServer.getPort();
     }
 
+    @PactTestFor(pactMethod = "validateMaxsAddress")
     @Test
-    @PactVerification(fragment = "validateMaxsAddress")
     public void validAddress() {
         service.validate(new Address(
                             new Recipient("Max Mustermann"),
@@ -84,7 +82,7 @@ public class AddressValidationServiceTest {
     }
 
     @Test
-    @PactVerification(fragment = "validateSherlocksAddress")
+    @PactTestFor(pactMethod = "validateSherlocksAddress")
     public void invalidAddress() {
         assertThatThrownBy(() -> 
             service.validate(new Address(
