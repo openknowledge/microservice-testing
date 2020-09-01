@@ -42,7 +42,7 @@ public class BillingAddressRepositoryTest {
 
     private BillingAddressRepository repository;
 
-    @Pact(provider="billing-service", consumer = "customer-service")
+    @Pact(consumer = "customer-service")
     public RequestResponsePact getMax(PactDslWithProvider builder) throws IOException {
         return builder
           .given("Three customers")
@@ -61,7 +61,7 @@ public class BillingAddressRepositoryTest {
           .toPact();
     }
 
-    @Pact(provider="billing-service", consumer = "customer-service")
+    @Pact(consumer = "customer-service")
     public RequestResponsePact dontGetMissing(PactDslWithProvider builder) throws IOException {
         return builder
           .given("Three customers")
@@ -73,7 +73,7 @@ public class BillingAddressRepositoryTest {
           .toPact();
     }
 
-    @Pact(provider="billing-service", consumer = "customer-service")
+    @Pact(consumer = "customer-service")
     public RequestResponsePact updateMax(PactDslWithProvider builder) throws IOException {
         return builder
           .given("Three customers")
