@@ -118,7 +118,6 @@ pipeline {
                     export HELM_HOST=host.docker.internal:${env.HELM_PORT}
                     helm repo update
                     helm upgrade --install customer --set app.imageTag=${env.VERSION} --set app.service.targetPort=${env.PORT} --namespace=${env.NAMESPACE} chartmuseum/customer --version=${env.VERSION}
-                    fi
                 """
             }
         }
