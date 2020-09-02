@@ -30,7 +30,7 @@ spec:
       labels:
         # revision and date are used to force a rolling update in Kubernetes
         revision: "{{ .Release.Revision }}"
-        date: "{{ .Release.Time.Seconds }}"
+        date: "{{ now | unixEpoch }}"
         app: {{ template "app.name" . }}
         component: "{{ .Values.app.name }}"
         release: "{{ .Release.Name }}"
