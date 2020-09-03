@@ -23,9 +23,7 @@ import javax.json.bind.annotation.JsonbTypeAdapter;
 
 public class Street {
 
-    @JsonbTypeAdapter(StreetName.Adapter.class)
     private StreetName name;
-    @JsonbTypeAdapter(HouseNumber.Adapter.class)
     private HouseNumber number;
 
     @JsonbCreator

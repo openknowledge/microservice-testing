@@ -25,10 +25,8 @@ import javax.json.bind.annotation.JsonbProperty;
 import javax.json.bind.annotation.JsonbTypeAdapter;
 
 public class Address {
-    @JsonbTypeAdapter(Recipient.Adapter.class)
     private Recipient recipient;
     private Street street;
-    @JsonbTypeAdapter(City.Adapter.class)
     private City city;
 
     @JsonbCreator

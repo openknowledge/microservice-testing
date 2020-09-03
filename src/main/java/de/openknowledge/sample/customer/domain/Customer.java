@@ -25,9 +25,7 @@ import de.openknowledge.sample.address.domain.Address;
 
 public class Customer {
 
-    @JsonbTypeAdapter(CustomerNumber.Adapter.class)
     CustomerNumber number;
-    @JsonbTypeAdapter(CustomerName.Adapter.class)
     private CustomerName name;
     private Address billingAddress;
     private Address deliveryAddress;
