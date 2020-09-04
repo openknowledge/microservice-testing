@@ -15,6 +15,7 @@
  */
 package de.openknowledge.sample.infrastructure;
 
+import java.lang.annotation.Annotation;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -25,9 +26,10 @@ import java.util.List;
 
 import org.h2.tools.RunScript;
 import org.h2.tools.Server;
-import org.junit.rules.ExternalResource;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.*;
 
-public class H2Database extends ExternalResource {
+public class H2Database implements BeforeAllCallback, AfterAllCallback {
 
     private Server database;
     private String initScript;
@@ -83,7 +85,8 @@ public class H2Database extends ExternalResource {
         }
     }
 
-    protected void before() throws Throwable {
+    @Override
+    public void beforeAll(ExtensionContext extensionContext) throws SQLException {
         database = Server.createTcpServer("-tcp", "-tcpAllowOthers", "-ifNotExists");
         database.start();
         if (initScript != null) {
@@ -91,7 +94,8 @@ public class H2Database extends ExternalResource {
         }
     }
 
-    protected void after() {
+    @Override
+    public void afterAll(ExtensionContext extensionContext) {
         try {
             execute("DROP ALL OBJECTS");
         } catch (SQLException e) {

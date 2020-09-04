@@ -29,6 +29,10 @@ public class StreetName {
 
     private String name;
 
+    public static StreetName valueOf(String name) {
+        return new StreetName(name);
+    }
+
     protected StreetName() {
         // for frameworks
     }

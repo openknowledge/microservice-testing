@@ -15,11 +15,13 @@
  */
 package de.openknowledge.sample.infrastructure;
 
+import org.junit.jupiter.api.extension.*;
+
+import java.security.cert.Extension;
 import java.sql.SQLException;
 
-import org.junit.rules.ExternalResource;
 
-public class H2TestData extends ExternalResource {
+public class H2TestData implements BeforeAllCallback, AfterAllCallback {
 
     private H2Database database;
     private String testDataFile;
@@ -28,11 +30,13 @@ public class H2TestData extends ExternalResource {
         this.database = database;
     }
 
-    protected void before() throws Throwable {
+    @Override
+    public void beforeAll(ExtensionContext extensionContext) {
         if (testDataFile != null) {
             executeScript(testDataFile);
         }
     }
+
 
     public H2TestData withTestdataFile(String testDataFile) {
         this.testDataFile = testDataFile;
@@ -63,5 +67,10 @@ public class H2TestData extends ExternalResource {
         } catch (SQLException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    @Override
+    public void afterAll(ExtensionContext extensionContext) throws Exception {
+
     }
 }

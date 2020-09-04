@@ -19,6 +19,7 @@ import static org.apache.commons.lang3.Validate.notNull;
 
 import javax.json.bind.annotation.JsonbCreator;
 import javax.json.bind.annotation.JsonbProperty;
+import javax.json.bind.annotation.JsonbTypeAdapter;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;

@@ -8,7 +8,7 @@
     the ~ specific language governing permissions and limitations under the License. -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.openkonwledge.sample.shop</groupId>
@@ -32,27 +32,29 @@
         <wildfly.port.offset>-2078</wildfly.port.offset>
         <wildfly.management.port>7912</wildfly.management.port>
         <test.http.port>6002</test.http.port>
+        <meecrowave.version>1.2.9</meecrowave.version>
 
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.jboss.arquillian</groupId>
-                <artifactId>arquillian-bom</artifactId>
-                <version>1.2.0.Final</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
 
     <dependencies>
 
         <dependency>
-            <groupId>javax</groupId>
-            <artifactId>javaee-api</artifactId>
-            <version>8.0.1</version>
+            <groupId>org.apache.meecrowave</groupId>
+            <artifactId>meecrowave-specs-api</artifactId>
+            <version>${meecrowave.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.meecrowave</groupId>
+            <artifactId>meecrowave-core</artifactId>
+            <version>${meecrowave.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -72,18 +74,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>5.7.0-RC1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.7.0-RC1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>3.6.2</version>
@@ -98,40 +88,24 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>1.4.199</version>
+            <version>1.4.200</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.jboss.resteasy</groupId>
-            <artifactId>resteasy-client</artifactId>
-            <version>4.0.0.Final</version>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-entitymanager</artifactId>
+            <version>5.4.21.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.7.0-RC1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.jboss.resteasy</groupId>
-            <artifactId>resteasy-json-binding-provider</artifactId>
-            <version>4.0.0.Final</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.arquillian.junit</groupId>
-            <artifactId>arquillian-junit-container</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.wildfly.arquillian</groupId>
-            <artifactId>wildfly-arquillian-container-managed</artifactId>
-            <version>2.1.1.Final</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.shrinkwrap.resolver</groupId>
-            <artifactId>shrinkwrap-resolver-impl-maven</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.shrinkwrap.descriptors</groupId>
-            <artifactId>shrinkwrap-descriptors-impl-javaee</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.7.0-RC1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -141,10 +115,41 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>au.com.dius</groupId>
-            <artifactId>pact-jvm-provider-junit</artifactId>
-            <version>4.0.10</version>
+            <groupId>au.com.dius.pact.provider</groupId>
+            <artifactId>junit5</artifactId>
+            <version>4.1.7</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.meecrowave</groupId>
+            <artifactId>meecrowave-junit</artifactId>
+            <version>${meecrowave.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ArneLimburg</groupId>
+            <artifactId>cdimock</artifactId>
+            <version>0.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>rocks.limburg.microjpa</groupId>
+            <artifactId>microjpa</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.microprofile.config</groupId>
+            <artifactId>microprofile-config-api</artifactId>
+            <version>1.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.config</groupId>
+            <artifactId>geronimo-config-impl</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-validation_1.0_spec</artifactId>
+            <version>1.1</version>
         </dependency>
     </dependencies>
 
@@ -164,43 +169,6 @@
                         <arq.container.wildfly-managed.configuration.javaVmArguments>-Djboss.socket.binding.port-offset=${wildfly.port.offset}</arq.container.wildfly-managed.configuration.javaVmArguments>
                     </systemPropertyVariables>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.1.1</version>
-                <executions>
-                    <execution>
-                        <id>unpack-wildfly</id>
-                        <phase>process-test-resources</phase>
-                        <goals>
-                            <goal>unpack</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.wildfly</groupId>
-                                    <artifactId>wildfly-dist</artifactId>
-                                    <version>${wildfly.version}</version>
-                                    <type>zip</type>
-                                </artifactItem>
-                            </artifactItems>
-                            <outputDirectory>/tmp</outputDirectory>
-
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>copy-postgresql</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <includeArtifactIds>postgresql</includeArtifactIds>
-                            <outputDirectory>target/postgresql</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
