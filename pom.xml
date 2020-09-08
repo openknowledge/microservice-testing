@@ -134,7 +134,7 @@
         <dependency>
             <groupId>com.github.ArneLimburg</groupId>
             <artifactId>microjpa</artifactId>
-            <version>0.9.0</version>
+            <version>0.9.1</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.microprofile.config</groupId>
@@ -163,10 +163,10 @@
                 <configuration>
                     <systemPropertyVariables>
                         <test.http.port>${test.http.port}</test.http.port>
-                        <jboss.home>/tmp/wildfly-${wildfly.version}</jboss.home>
-                        <arq.container.wildfly-managed.default>true</arq.container.wildfly-managed.default>
-                        <arq.container.wildfly-managed.configuration.managementPort>${wildfly.management.port}</arq.container.wildfly-managed.configuration.managementPort>
-                        <arq.container.wildfly-managed.configuration.javaVmArguments>-Djboss.socket.binding.port-offset=${wildfly.port.offset}</arq.container.wildfly-managed.configuration.javaVmArguments>
+                        <javax.persistence.jdbc.url>jdbc:h2:tcp://localhost:9092/~/delivery</javax.persistence.jdbc.url>
+                        <javax.persistence.jdbc.driver>org.h2.Driver</javax.persistence.jdbc.driver>
+                        <javax.persistence.jdbc.user>sa</javax.persistence.jdbc.user>
+                        <javax.persistence.jdbc.password>sa</javax.persistence.jdbc.password>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>

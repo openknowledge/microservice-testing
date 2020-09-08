@@ -51,11 +51,6 @@ import static org.mockito.Mockito.when;
 @Provider("delivery-service")
 @PactFolder("src/test/pacts")
 @MeecrowaveConfig()
-@PersistenceContext(unitName = "delivery-service", properties = {
-        @PersistenceProperty(name = "javax.persistence.jdbc.url", value = "jdbc:h2:tcp://localhost:9092/~/delivery"),
-        @PersistenceProperty(name = "javax.persistence.jdbc.driver", value = "org.h2.Driver"),
-        @PersistenceProperty(name = "javax.persistence.jdbc.user", value = "sa"),
-        @PersistenceProperty(name = "javax.persistence.jdbc.password", value = "sa")})
 public class DeliveryAddressServiceTest {
 
     @ConfigurationInject
