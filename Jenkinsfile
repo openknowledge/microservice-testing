@@ -89,7 +89,7 @@ pipeline {
                     cd ./helm 
                     export HELM_HOST=host.docker.internal:${env.HELM_PORT}
                     helm package ./billing
-                    helm push --force ./billing chartmuseum
+                    helm cm-push --force ./billing chartmuseum
                 """
                 script {
                     if (env.PERFORM_RELEASE.equals('true') && !env.RELEASE_VERSION.equals(env.SNAPSHOT_VERSION)) {
@@ -114,7 +114,6 @@ pipeline {
             }
             steps {
                 sh """
-                    export HELM_HOST=host.docker.internal:${env.HELM_PORT}
                     helm repo update
                     helm upgrade --install billing --set app.imageTag=${env.VERSION} --set app.service.targetPort=${env.PORT} --namespace=${env.NAMESPACE} chartmuseum/billing --version=${env.VERSION}
                 """
