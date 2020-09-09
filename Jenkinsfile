@@ -24,6 +24,24 @@ pipeline {
 
     triggers {
         pollSCM("* * * * *")
+        GenericTrigger(
+            genericRequestVariables: [
+                [key: 'stage', regexpFilter: ''],
+                [key: 'verifyPacts', regexpFilter: '']
+            ],
+
+            causeString: 'Triggered by web hook',
+
+            token: 'billing-service',
+
+            printContributedVariables: true,
+            printPostContent: true,
+
+            silentResponse: false,
+
+            regexpFilterText: '$stage',
+            regexpFilterExpression: ".*${(env.BRANCH_NAME == 'master' ? 'prod' : 'test')}.*"
+        )
     }
 
     stages {
@@ -92,7 +110,7 @@ pipeline {
                 }
             }
             steps {
-                sh 'mvn package -DskipTests -B'
+                sh 'mvn package -Dmaven.test.skip=true -B'
                 sh 'docker build -t billing .'
             }
         }
@@ -152,7 +170,6 @@ pipeline {
                     helm upgrade --install billing --set app.imageTag=${env.VERSION} --set app.service.targetPort=${env.PORT} --namespace=${env.NAMESPACE} chartmuseum/billing --version=${env.VERSION}
                 """
                 sh "curl -H 'Content-Type: application/json' -X PUT http://host.docker.internal/pacticipants/billing-service/versions/${env.VERSION}/tags/${env.STAGE}"
-                sh "curl -X DELETE http://host.docker.internal/pacticipants/billing-service/versions/${env.VERSION}/tags/pending-${env.STAGE}"
             }
         }
     }
