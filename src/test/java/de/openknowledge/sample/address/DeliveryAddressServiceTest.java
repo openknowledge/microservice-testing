@@ -22,10 +22,9 @@ import au.com.dius.pact.provider.junit5.PactVerificationInvocationContextProvide
 import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.StateChangeAction;
-import au.com.dius.pact.provider.junitsupport.loader.PactFolder;
+import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import de.openknowledge.sample.address.domain.AddressValidationService;
 
-import de.openknowledge.sample.address.infrastructure.ValidationExceptionHandler;
 import de.openknowledge.sample.infrastructure.H2Database;
 import de.openknowledge.sample.infrastructure.H2TestData;
 import org.apache.meecrowave.Meecrowave;
@@ -37,19 +36,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import rocks.limburg.cdimock.MockitoBeans;
 
-
 import javax.inject.Inject;
-import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceProperty;
 import javax.validation.ValidationException;
 
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
 
 @MockitoBeans(types = {AddressValidationService.class})
 @Provider("delivery-service")
-@PactFolder("src/test/pacts")
+@PactBroker(host = "${pactBroker.host}")
 @MeecrowaveConfig()
 public class DeliveryAddressServiceTest {
 
