@@ -176,10 +176,7 @@
                 <artifactId>maven</artifactId>
                 <version>4.1.0</version>
                 <configuration>
-                    <pactDirectory>src/test/pacts</pactDirectory> <!-- Defaults to ${project.build.directory}/pacts -->
-                    <pactBrokerUrl>http://host.docker.internal:80</pactBrokerUrl>
-                    <trimSnapshot>true</trimSnapshot> <!-- Defaults to false -->
-                    <skipPactPublish>false</skipPactPublish> <!-- Defaults to false -->
+                    <pactBrokerUrl>http://${pactBroker.host}:80</pactBrokerUrl>
                 </configuration>
             </plugin>
         </plugins>
