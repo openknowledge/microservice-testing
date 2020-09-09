@@ -114,15 +114,9 @@ pipeline {
             }
             steps {
                 sh """
-                    set +e
                     export HELM_HOST=host.docker.internal:${env.HELM_PORT}
                     helm repo update
-                    helm upgrade billing --set app.imageTag=${env.VERSION} --set app.service.targetPort=${env.PORT} --namespace=${env.NAMESPACE} chartmuseum/billing --version=${env.VERSION}
-                    if [ \$? -ne 0 ]
-                    then
-                        set -e
-                        helm install --name billing --set app.imageTag=${env.VERSION} --set app.service.targetPort=${env.PORT} --namespace=${env.NAMESPACE} chartmuseum/billing --version=${env.VERSION}
-                    fi
+                    helm upgrade --install billing --set app.imageTag=${env.VERSION} --set app.service.targetPort=${env.PORT} --namespace=${env.NAMESPACE} chartmuseum/billing --version=${env.VERSION}
                 """
             }
         }
