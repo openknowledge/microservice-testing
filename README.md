@@ -14,7 +14,5 @@ docker push localhost:5000/delivery-db:latest
 
 cd helm-database/delivery-db/
 helm package .
-export HELM_HOST=localhost:44134
-helm install --name delivery-db --namespace onlineshop .
-export HELM_HOST=localhost:44135
-helm install --name delivery-db --namespace onlineshop-test .
+helm install delivery-db --namespace onlineshop .
+helm install delivery-db --namespace onlineshop-test .

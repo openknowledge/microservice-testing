@@ -34,7 +34,11 @@ public class City {
     protected City() {
         // for framework
     }
-    
+
+    public static City valueOf(String name) {
+        return new City(name);
+    }
+
     public City(String name) {
         this.name = notNull(name, "name may not be empty").trim();
     }
