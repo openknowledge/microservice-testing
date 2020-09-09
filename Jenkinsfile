@@ -92,7 +92,7 @@ pipeline {
                     cd ./helm 
                     export HELM_HOST=host.docker.internal:${env.HELM_PORT}
                     helm package ./delivery
-                    helm push --force ./delivery chartmuseum
+                    helm cm-push --force ./delivery chartmuseum
                 """
                 script {
                     if (env.PERFORM_RELEASE.equals('true') && !env.RELEASE_VERSION.equals(env.SNAPSHOT_VERSION)) {

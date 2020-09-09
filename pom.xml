@@ -18,8 +18,8 @@
     <packaging>war</packaging>
 
     <scm>
-        <connection>scm:git:http://openknowledge:cdc-workshop@host.docker.internal:10080/openknowledge/delivery-service.git</connection>
-        <developerConnection>scm:git:http://openknowledge:cdc-workshop@host.docker.internal:10080/openknowledge/delivery-service.git</developerConnection>
+        <connection>scm:git:http://openknowledge:cdc-workshop@host.docker.internal:7080/openknowledge/delivery-service.git</connection>
+        <developerConnection>scm:git:http://openknowledge:cdc-workshop@host.docker.internal:7080/openknowledge/delivery-service.git</developerConnection>
     </scm>
 
     <properties>
