@@ -75,6 +75,26 @@ pipeline {
                 )
             }
         }
+        stage ('Test providers') {
+            when {
+                anyOf {
+                    not {
+                        branch 'master'
+                    }
+                    environment name: 'PERFORM_RELEASE', value: 'true'
+                }
+            }
+            steps {
+                parallel(
+                    'delivery-service': {
+                        build job: "delivery-service/${env.BRANCH_NAME}", parameters: [booleanParam(name: 'verifyPacts', value: true)]
+                    },
+                    'billing-service': {
+                        build job: "billing-service/${env.BRANCH_NAME}", parameters: [booleanParam(name: 'verifyPacts', value: true)]
+                    }
+                )
+            }
+        }
         stage ('Package') {
             when {
                 anyOf {
