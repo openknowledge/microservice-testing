@@ -2,6 +2,10 @@
 pipeline {
     agent any
 
+    parameters {
+        booleanParam(name: 'verifyPacts', defaultValue: false, description: 'should this job just run to verify pacts from a consumer')
+    }
+
     options {
         disableConcurrentBuilds()
     }
@@ -12,6 +16,7 @@ pipeline {
         PERFORM_RELEASE = "${env.SNAPSHOT_VERSION.contains('-SNAPSHOT') && env.BRANCH_NAME == 'master' && !env.LAST_COMMIT_MESSAGE.startsWith('update version to ')}"
         RELEASE_VERSION = "${env.SNAPSHOT_VERSION.contains('-SNAPSHOT') ? env.SNAPSHOT_VERSION.substring(0, env.SNAPSHOT_VERSION.lastIndexOf('-SNAPSHOT')) : SNAPSHOT_VERSION}"
         VERSION = "${env.BRANCH_NAME == 'master' && !env.LAST_COMMIT_MESSAGE.startsWith('update version to ') ? env.RELEASE_VERSION : env.SNAPSHOT_VERSION}"
+        ROOT_DIRECTORY = "${params.verifyPacts == true && env.BRANCH_NAME == 'master' && env.SNAPSHOT_VERSION.endsWith("-SNAPSHOT") ? 'target/checkout' : '.'}"
         NAMESPACE = "${env.BRANCH_NAME == 'master' ? 'onlineshop' : 'onlineshop-test'}"
         PORT = "${env.BRANCH_NAME == 'master' ? '30002' : '31002'}"
     }
@@ -28,17 +33,30 @@ pipeline {
                         branch 'master'
                     }
                     environment name: 'PERFORM_RELEASE', value: 'true'
+                    expression {
+                        params.verifyPacts == true
+                    }
                 }
             }
             steps {
                 echo "Building version ${env.VERSION}"
                 script {
-                    if (env.PERFORM_RELEASE.equals('true') && !env.RELEASE_VERSION.equals(env.SNAPSHOT_VERSION)) {
+                    if (params.verifyPacts == true && env.BRANCH_NAME == 'master' && env.SNAPSHOT_VERSION.endsWith("-SNAPSHOT")) {
+                        int previousRevision = Integer.parseInt(env.RELEASE_VERSION.substring(env.RELEASE_VERSION.lastIndexOf(".") + 1)) - 1
+                        if (previousRevision >= 0) {
+                            previousVersion = RELEASE_VERSION.substring(0, env.RELEASE_VERSION.lastIndexOf(".")) + "." + previousRevision
+                            sh "mvn scm:checkout -DscmVersionType=tag -DscmVersion=${previousVersion}"
+                            echo "Testing against version ${previousVersion}"
+                        }
+                    } else if (env.PERFORM_RELEASE.equals('true') && !env.RELEASE_VERSION.equals(env.SNAPSHOT_VERSION)) {
                         sh "mvn versions:set -DnewVersion=${env.RELEASE_VERSION} -B"
                         sh "sed -i 's/${env.SNAPSHOT_VERSION}/${env.RELEASE_VERSION}/g' helm/delivery/Chart.yaml"
                     }
                 }
-                sh 'mvn clean test-compile -B'
+                sh """
+                    cd ${ROOT_DIRECTORY}
+                    mvn clean test-compile -B
+                """
             }
         }
         stage ('Test') {
@@ -48,10 +66,33 @@ pipeline {
                         branch 'master'
                     }
                     environment name: 'PERFORM_RELEASE', value: 'true'
+                    expression {
+                        params.verifyPacts == true
+                    }
                 }
             }
             steps {
-                sh "mvn test pact:publish -DpactBroker.url=http://host.docker.internal -B"
+                sh """
+                    cd ${ROOT_DIRECTORY}
+                    mvn test -DpactBroker.url=http://host.docker.internal -B
+                """
+            }
+        }
+        stage ('Test providers') {
+            when {
+                anyOf {
+                    not {
+                        branch 'master'
+                    }
+                    environment name: 'PERFORM_RELEASE', value: 'true'
+                }
+                expression {
+                    params.verifyPacts == false
+                }
+            }
+            steps {
+                sh 'mvn pact:publish -DpactBroker.url=http://host.docker.internal -B'
+                build job: "address-validation-service/${env.BRANCH_NAME}", parameters: [booleanParam(name: 'verifyPacts', value: true)]
             }
         }
         stage ('Package') {
@@ -61,6 +102,9 @@ pipeline {
                         branch 'master'
                     }
                     environment name: 'PERFORM_RELEASE', value: 'true'
+                }
+                expression {
+                    params.verifyPacts == false
                 }
             }
             steps {
@@ -75,6 +119,9 @@ pipeline {
                         branch 'master'
                     }
                     environment name: 'PERFORM_RELEASE', value: 'true'
+                }
+                expression {
+                    params.verifyPacts == false
                 }
             }
             steps {
@@ -105,6 +152,9 @@ pipeline {
         }
         stage ('Deploy') {
             when {
+                expression {
+                    params.verifyPacts == false
+                }
                 anyOf {
                     not {
                         branch 'master'
