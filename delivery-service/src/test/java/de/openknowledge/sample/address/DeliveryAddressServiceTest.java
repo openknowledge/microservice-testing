@@ -16,82 +16,56 @@
 
 package de.openknowledge.sample.address;
 
+import static javax.ws.rs.client.ClientBuilder.newClient;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
-import java.net.URL;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.enterprise.inject.Specializes;
 import javax.json.bind.JsonbBuilder;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.johnzon.jaxrs.jsonb.jaxrs.JsonbJaxrsProvider;
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.container.test.api.RunAsClient;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.asset.EmptyAsset;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.Maven;
-import org.jboss.shrinkwrap.resolver.api.maven.PomEquippedResolveStage;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.apache.meecrowave.Meecrowave;
+import org.apache.meecrowave.junit5.MeecrowaveConfig;
+import org.apache.meecrowave.testing.ConfigurationInject;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-import de.openknowledge.sample.address.application.AddressesApplication;
 import de.openknowledge.sample.address.domain.Address;
 import de.openknowledge.sample.address.domain.AddressValidationService;
+import rocks.limburg.cdimock.MockitoBeans;
 
-@RunAsClient
-@RunWith(Arquillian.class)
+@Testcontainers
+@MockitoBeans(types = {AddressValidationService.class})
+@MeecrowaveConfig
 public class DeliveryAddressServiceTest {
 
-    private static final Logger LOG = Logger.getLogger(DeliveryAddressServiceTest.class.getName());
-    @ClassRule
+    @Container
     public static PostgreSQLContainer<?> postgresql = new PostgreSQLContainer<>("postgres:9.6.24");
-    
-    @Deployment
-    public static WebArchive createDeployment() {
-        PomEquippedResolveStage pomFile = Maven.resolver().loadPomFromFile("pom.xml");
 
+    @ConfigurationInject
+    private Meecrowave.Builder config;
+    private WebTarget addressTarget;
+    
+    @BeforeAll
+    public static void setJdbcUrl() {
         System.setProperty("javax.persistence.jdbc.url", postgresql.getJdbcUrl());
         System.setProperty("javax.persistence.jdbc.user", postgresql.getUsername());
         System.setProperty("javax.persistence.jdbc.password", postgresql.getPassword());
         System.setProperty("javax.persistence.schema-generation.database.action", "drop-and-create");
-        WebArchive archive = ShrinkWrap.create(WebArchive.class)
-                .addAsLibraries(pomFile.resolve("org.apache.commons:commons-lang3").withTransitivity().asFile())
-                .addAsLibraries(pomFile.resolve("org.microjpa:microjpa").withTransitivity().asFile())
-                .addAsLibraries(pomFile.resolve("org.postgresql:postgresql").withTransitivity().asFile())
-                .addPackage(AddressesApplication.class.getPackage())
-                .addClass(AddressValidationServiceMock.class)
-//                .addPackage(Address.class.getPackage())
-//                .addPackage(ValidationExceptionHandler.class.getPackage())
-                .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml");
-
-        LOG.log(Level.FINE, () -> archive.toString(true));
-        return archive;
     }
 
-    @ArquillianResource
-    private URL baseURI;
-    private WebTarget addressTarget;
-
-    @Before
-    public void initializeClient() {
-        addressTarget = ClientBuilder.newClient()
-                .register(JsonbJaxrsProvider.class)
-                .target(baseURI.toString())
-                .path("delivery-addresses");
+    @BeforeEach
+    public void setUp() {
+        addressTarget = newClient().target("http://localhost:" + config.getHttpPort() + "/delivery-addresses");
     }
 
     @Test
