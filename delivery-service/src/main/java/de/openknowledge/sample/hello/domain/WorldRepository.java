@@ -13,23 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.openknowledge.sample.infrastructure;
+package de.openknowledge.sample.hello.domain;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import javax.enterprise.context.ApplicationScoped;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
+@ApplicationScoped
+public class WorldRepository {
 
-import javax.enterprise.inject.Alternative;
-import javax.enterprise.inject.Stereotype;
-
-@Stereotype
-@Alternative
-@Retention(RUNTIME)
-@Target({TYPE, METHOD, FIELD})
-public @interface CdiMock {
-
+    public String getWorld() {
+        return "World";
+    }
 }
