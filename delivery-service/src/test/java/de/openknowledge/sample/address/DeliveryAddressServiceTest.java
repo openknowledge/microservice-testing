@@ -43,8 +43,10 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.jboss.shrinkwrap.resolver.api.maven.PomEquippedResolveStage;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.testcontainers.containers.PostgreSQLContainer;
 
 import de.openknowledge.sample.address.application.AddressesApplication;
 import de.openknowledge.sample.address.domain.Address;
@@ -55,20 +57,21 @@ import de.openknowledge.sample.address.domain.AddressValidationService;
 public class DeliveryAddressServiceTest {
 
     private static final Logger LOG = Logger.getLogger(DeliveryAddressServiceTest.class.getName());
-
+    @ClassRule
+    public static PostgreSQLContainer<?> postgresql = new PostgreSQLContainer<>("postgres:9.6.24");
+    
     @Deployment
     public static WebArchive createDeployment() {
         PomEquippedResolveStage pomFile = Maven.resolver().loadPomFromFile("pom.xml");
 
-        System.setProperty("javax.persistence.jdbc.url", "jdbc:h2:mem:delivery");
-        System.setProperty("javax.persistence.jdbc.driver", "org.h2.Driver");
-        System.setProperty("javax.persistence.jdbc.user", "sa");
-        System.setProperty("javax.persistence.jdbc.password", "");
+        System.setProperty("javax.persistence.jdbc.url", postgresql.getJdbcUrl());
+        System.setProperty("javax.persistence.jdbc.user", postgresql.getUsername());
+        System.setProperty("javax.persistence.jdbc.password", postgresql.getPassword());
         System.setProperty("javax.persistence.schema-generation.database.action", "drop-and-create");
         WebArchive archive = ShrinkWrap.create(WebArchive.class)
                 .addAsLibraries(pomFile.resolve("org.apache.commons:commons-lang3").withTransitivity().asFile())
                 .addAsLibraries(pomFile.resolve("org.microjpa:microjpa").withTransitivity().asFile())
-                .addAsLibraries(pomFile.resolve("com.h2database:h2").withTransitivity().asFile())
+                .addAsLibraries(pomFile.resolve("org.postgresql:postgresql").withTransitivity().asFile())
                 .addPackage(AddressesApplication.class.getPackage())
                 .addClass(AddressValidationServiceMock.class)
 //                .addPackage(Address.class.getPackage())
