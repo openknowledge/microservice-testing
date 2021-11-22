@@ -16,70 +16,102 @@
 
 package de.openknowledge.sample.address;
 
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.doThrow;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.inject.Inject;
-import javax.validation.ValidationException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.apache.meecrowave.Meecrowave;
-import org.apache.meecrowave.junit5.MeecrowaveConfig;
-import org.apache.meecrowave.testing.ConfigurationInject;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.TestTemplate;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import javax.enterprise.inject.Specializes;
+import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import au.com.dius.pact.provider.junit5.HttpTestTarget;
-import au.com.dius.pact.provider.junit5.PactVerificationContext;
-import au.com.dius.pact.provider.junit5.PactVerificationInvocationContextProvider;
-import au.com.dius.pact.provider.junitsupport.Provider;
-import au.com.dius.pact.provider.junitsupport.State;
-import au.com.dius.pact.provider.junitsupport.StateChangeAction;
-import au.com.dius.pact.provider.junitsupport.loader.PactFolder;
+import org.apache.johnzon.jaxrs.jsonb.jaxrs.JsonbJaxrsProvider;
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.container.test.api.RunAsClient;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.asset.EmptyAsset;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
+import org.jboss.shrinkwrap.resolver.api.maven.PomEquippedResolveStage;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import de.openknowledge.sample.address.application.AddressesApplication;
+import de.openknowledge.sample.address.domain.Address;
 import de.openknowledge.sample.address.domain.AddressValidationService;
-import de.openknowledge.sample.infrastructure.H2Database;
-import de.openknowledge.sample.infrastructure.H2TestData;
-import rocks.limburg.cdimock.MockitoBeans;
 
-@MockitoBeans(types = {AddressValidationService.class})
-@Provider("delivery-service")
-@PactFolder("src/test/pacts")
-@MeecrowaveConfig
+@RunAsClient
+@RunWith(Arquillian.class)
 public class DeliveryAddressServiceTest {
 
-    @ConfigurationInject
-    private Meecrowave.Builder config;
+    private static final Logger LOG = Logger.getLogger(DeliveryAddressServiceTest.class.getName());
 
-    @RegisterExtension
-    public static H2Database database = new H2Database("delivery").withInitScript("src/main/resources/sql/create.sql");
+    @Deployment
+    public static WebArchive createDeployment() {
+        PomEquippedResolveStage pomFile = Maven.resolver().loadPomFromFile("pom.xml");
 
-    @RegisterExtension
-    public H2TestData testData = new H2TestData(database).withTestdataFile("src/test/sql/data.sql");
+        System.setProperty("javax.persistence.jdbc.url", "jdbc:h2:mem:delivery");
+        System.setProperty("javax.persistence.jdbc.driver", "org.h2.Driver");
+        System.setProperty("javax.persistence.jdbc.user", "sa");
+        System.setProperty("javax.persistence.jdbc.password", "");
+        System.setProperty("javax.persistence.schema-generation.database.action", "drop-and-create");
+        WebArchive archive = ShrinkWrap.create(WebArchive.class)
+                .addAsLibraries(pomFile.resolve("org.apache.commons:commons-lang3").withTransitivity().asFile())
+                .addAsLibraries(pomFile.resolve("org.microjpa:microjpa").withTransitivity().asFile())
+                .addAsLibraries(pomFile.resolve("com.h2database:h2").withTransitivity().asFile())
+                .addPackage(AddressesApplication.class.getPackage())
+                .addClass(AddressValidationServiceMock.class)
+//                .addPackage(Address.class.getPackage())
+//                .addPackage(ValidationExceptionHandler.class.getPackage())
+                .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml");
 
-    @Inject
-    private AddressValidationService addressValidationService;
-
-    @BeforeEach
-    public void setUp(PactVerificationContext context) {
-        doThrow(new ValidationException("City not found")).when(addressValidationService).validate(argThat(a -> a.getCity().toString().contains("London")));
-        context.setTarget(new HttpTestTarget("localhost", config.getHttpPort(), "/"));
+        LOG.log(Level.FINE, () -> archive.toString(true));
+        return archive;
     }
 
-    @TestTemplate
-    @ExtendWith(PactVerificationInvocationContextProvider.class)
-    void pactVerificationTestTemplate(PactVerificationContext context) {
-        context.verifyInteraction();
+    @ArquillianResource
+    private URL baseURI;
+    private WebTarget addressTarget;
+
+    @Before
+    public void initializeClient() {
+        addressTarget = ClientBuilder.newClient()
+                .register(JsonbJaxrsProvider.class)
+                .target(baseURI.toString())
+                .path("delivery-addresses");
     }
 
-    @State("Three customers")
-    public void setThreeCustomers() {
-        testData.executeScript("src/test/sql/data.sql");
+    @Test
+    public void createAddress() {
+        Response response = addressTarget
+                .path("0815")
+                .request()
+                .post(Entity.entity(getResource("0815.json"), MediaType.APPLICATION_JSON));
+        assertThat(response.getStatus()).isEqualTo(200);
+
+        Map<?, ?> expected = JsonbBuilder.create().fromJson(getResource("0815.json"), Map.class);
+        assertThat(addressTarget.path("0815").request().get(Map.class)).containsAllEntriesOf(expected);
     }
 
-    @State(value = "Three customers", action = StateChangeAction.TEARDOWN)
-    public void cleanupThreeCustomers() {
-        testData.after();
+    private InputStream getResource(String name) {
+        return DeliveryAddressServiceTest.class.getResourceAsStream(name);
+    }
+
+    @Specializes
+    public static class AddressValidationServiceMock extends AddressValidationService {
+        public void validate(Address address) {
+            // do nothing
+        }
     }
 }
 
