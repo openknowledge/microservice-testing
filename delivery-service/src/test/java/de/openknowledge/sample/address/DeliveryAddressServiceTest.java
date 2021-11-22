@@ -30,38 +30,28 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.meecrowave.Meecrowave;
-import org.apache.meecrowave.junit5.MeecrowaveConfig;
+import org.apache.meecrowave.junit5.MonoMeecrowaveConfig;
 import org.apache.meecrowave.testing.ConfigurationInject;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import de.openknowledge.sample.address.domain.Address;
 import de.openknowledge.sample.address.domain.AddressValidationService;
 import rocks.limburg.cdimock.MockitoBeans;
+import space.testflight.ConfigProperty;
+import space.testflight.Flyway;
 
-@Testcontainers
-@MockitoBeans(types = {AddressValidationService.class})
-@MeecrowaveConfig
+@Flyway(configuration = {
+        @ConfigProperty(key = "space.testflight.jdbc.url.property", value = "javax.persistence.jdbc.url"),
+        @ConfigProperty(key = "space.testflight.jdbc.username.property", value = "javax.persistence.jdbc.user"),
+        @ConfigProperty(key = "space.testflight.jdbc.password.property", value = "javax.persistence.jdbc.password"), })
+@MockitoBeans(types = { AddressValidationService.class })
+@MonoMeecrowaveConfig
 public class DeliveryAddressServiceTest {
-
-    @Container
-    public static PostgreSQLContainer<?> postgresql = new PostgreSQLContainer<>("postgres:9.6.24");
 
     @ConfigurationInject
     private Meecrowave.Builder config;
     private WebTarget addressTarget;
-    
-    @BeforeAll
-    public static void setJdbcUrl() {
-        System.setProperty("javax.persistence.jdbc.url", postgresql.getJdbcUrl());
-        System.setProperty("javax.persistence.jdbc.user", postgresql.getUsername());
-        System.setProperty("javax.persistence.jdbc.password", postgresql.getPassword());
-        System.setProperty("javax.persistence.schema-generation.database.action", "drop-and-create");
-    }
 
     @BeforeEach
     public void setUp() {
@@ -70,9 +60,7 @@ public class DeliveryAddressServiceTest {
 
     @Test
     public void createAddress() {
-        Response response = addressTarget
-                .path("0815")
-                .request()
+        Response response = addressTarget.path("0815").request()
                 .post(Entity.entity(getResource("0815.json"), MediaType.APPLICATION_JSON));
         assertThat(response.getStatus()).isEqualTo(200);
 
@@ -83,12 +71,4 @@ public class DeliveryAddressServiceTest {
     private InputStream getResource(String name) {
         return DeliveryAddressServiceTest.class.getResourceAsStream(name);
     }
-
-    @Specializes
-    public static class AddressValidationServiceMock extends AddressValidationService {
-        public void validate(Address address) {
-            // do nothing
-        }
-    }
 }
-

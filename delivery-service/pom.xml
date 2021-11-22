@@ -109,9 +109,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>1.16.2</version>
+            <groupId>space.testflight</groupId>
+            <artifactId>testflight</artifactId>
+            <version>0.7.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
