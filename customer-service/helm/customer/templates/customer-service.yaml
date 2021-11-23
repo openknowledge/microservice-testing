@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "app.fullname" . }}
+  labels:
+    app: {{ template "app.name" . }}
+    component: "{{ .Values.app.name }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+spec:
+  selector:
+    release: "{{ .Release.Name }}"
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .Values.app.service.internalPort }}
+      nodePort: {{ .Values.app.service.targetPort }}
+  type: {{ .Values.app.service.serviceType }}
