@@ -14,7 +14,6 @@ pipeline {
         VERSION = "${env.BRANCH_NAME == 'master' && !env.LAST_COMMIT_MESSAGE.startsWith('update version to ') ? env.RELEASE_VERSION : env.SNAPSHOT_VERSION}"
         NAMESPACE = "${env.BRANCH_NAME == 'master' ? 'onlineshop' : 'onlineshop-test'}"
         PORT = "${env.BRANCH_NAME == 'master' ? '30003' : '31003'}"
-        TEST_PORT = "${env.BRANCH_NAME == 'master' ? '6003' : '6103'}"
     }
 
     triggers {
@@ -52,7 +51,7 @@ pipeline {
                 }
             }
             steps {
-                sh "mvn test -Dtest.http.port=${env.TEST_PORT} -B"
+                sh "mvn test -B"
             }
         }
         stage ('Package') {
@@ -92,6 +91,8 @@ pipeline {
                 """
                 script {
                     if (env.PERFORM_RELEASE.equals('true') && !env.RELEASE_VERSION.equals(env.SNAPSHOT_VERSION)) {
+                        sh 'git config --global user.name "Jenkins"'
+                        sh 'git config --global user.email "ci@openknowledge.de"'
                         sh "mvn scm:checkin -Dmessage='release of version ${env.RELEASE_VERSION}' -B"
                         sh "mvn scm:tag -Dtag=${env.RELEASE_VERSION} -B"
                         int nextRevision = Integer.parseInt(env.RELEASE_VERSION.substring(env.RELEASE_VERSION.lastIndexOf(".") + 1)) + 1

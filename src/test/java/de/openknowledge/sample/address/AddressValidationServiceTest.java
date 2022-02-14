@@ -15,24 +15,23 @@
  */
 package de.openknowledge.sample.address;
 
+import org.apache.meecrowave.Meecrowave;
+import org.apache.meecrowave.junit5.MonoMeecrowaveConfig;
+import org.apache.meecrowave.testing.ConfigurationInject;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import au.com.dius.pact.provider.junit5.HttpTestTarget;
 import au.com.dius.pact.provider.junit5.PactVerificationContext;
 import au.com.dius.pact.provider.junit5.PactVerificationInvocationContextProvider;
 import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
-
 import au.com.dius.pact.provider.junitsupport.loader.PactFolder;
-import org.apache.meecrowave.Meecrowave;
-import org.apache.meecrowave.junit5.MeecrowaveConfig;
-import org.apache.meecrowave.testing.ConfigurationInject;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.TestTemplate;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 @Provider("address-validation-service")
 @PactFolder("src/test/pacts")
-@MeecrowaveConfig
+@MonoMeecrowaveConfig
 public class AddressValidationServiceTest {
 
     @ConfigurationInject

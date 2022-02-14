@@ -18,18 +18,17 @@
     <packaging>war</packaging>
 
     <scm>
-        <connection>scm:git:http://openknowledge:cdc-workshop@host.docker.internal:10080/openknowledge/address-validation-service.git</connection>
-        <developerConnection>scm:git:http://openknowledge:cdc-workshop@host.docker.internal:10080/openknowledge/address-validation-service.git</developerConnection>
+        <connection>scm:git:http://openknowledge:cdc-workshop@host.docker.internal:7080/openknowledge/address-validation-service.git</connection>
+        <developerConnection>scm:git:http://openknowledge:cdc-workshop@host.docker.internal:7080/openknowledge/address-validation-service.git</developerConnection>
     </scm>
 
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <failOnMissingWebXml>false</failOnMissingWebXml>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <test.http.port>6003</test.http.port>
-        <pactBroker.host>localhost</pactBroker.host>
-        <meecrowave.version>1.2.9</meecrowave.version>
+        <meecrowave.version>1.2.13</meecrowave.version>
+        <junit.version>5.8.2</junit.version>
     </properties>
 
     <dependencies>
@@ -48,25 +47,25 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.7.0-RC1</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.7.0-RC1</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>3.6.2</version>
+            <version>3.22.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>au.com.dius.pact.provider</groupId>
             <artifactId>junit5</artifactId>
-            <version>4.1.7</version>
+            <version>4.3.5</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -83,15 +82,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M3</version>
+                <version>3.0.0-M5</version>
                 <configuration>
                     <systemPropertyVariables>
-                        <test.http.port>${test.http.port}</test.http.port>
                         <pact.provider.version>${project.version}</pact.provider.version>
-                        <pact.verifier.publishResults>true</pact.verifier.publishResults>
-                        <pactBroker.host>${pactBroker.host}</pactBroker.host>
-                        <arq.container.meecrowave.default>true</arq.container.meecrowave.default>
-                        <arq.container.meecrowave.configuration.httpPort>${test.http.port}</arq.container.meecrowave.configuration.httpPort>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
