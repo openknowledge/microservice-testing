@@ -16,19 +16,27 @@
 
 package de.openknowledge.sample.address;
 
+import static de.openknowledge.sample.infrastructure.H2DatabaseCleanup.with;
+import static de.openknowledge.sample.infrastructure.ScriptExecutor.executeWith;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doThrow;
 
+import java.util.stream.Stream;
+
+import javax.enterprise.inject.Any;
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.Tuple;
+import javax.transaction.Status;
+import javax.transaction.UserTransaction;
 import javax.validation.ValidationException;
 
 import org.apache.meecrowave.Meecrowave;
-import org.apache.meecrowave.junit5.MeecrowaveConfig;
+import org.apache.meecrowave.junit5.MonoMeecrowaveConfig;
 import org.apache.meecrowave.testing.ConfigurationInject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import au.com.dius.pact.provider.junit5.HttpTestTarget;
 import au.com.dius.pact.provider.junit5.PactVerificationContext;
@@ -38,27 +46,23 @@ import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.StateChangeAction;
 import au.com.dius.pact.provider.junitsupport.loader.PactFolder;
 import de.openknowledge.sample.address.domain.AddressValidationService;
-import de.openknowledge.sample.infrastructure.H2Database;
-import de.openknowledge.sample.infrastructure.H2TestData;
 import rocks.limburg.cdimock.MockitoBeans;
 
 @MockitoBeans(types = {AddressValidationService.class})
 @Provider("delivery-service")
 @PactFolder("src/test/pacts")
-@MeecrowaveConfig
+@MonoMeecrowaveConfig
 public class DeliveryAddressServiceTest {
 
     @ConfigurationInject
     private Meecrowave.Builder config;
 
-    @RegisterExtension
-    public static H2Database database = new H2Database("delivery").withInitScript("src/main/resources/sql/create.sql");
-
-    @RegisterExtension
-    public H2TestData testData = new H2TestData(database).withTestdataFile("src/test/sql/data.sql");
-
     @Inject
     private AddressValidationService addressValidationService;
+    @Inject
+    private UserTransaction transaction;
+    @Inject @Any
+    private EntityManager entityManager;
 
     @BeforeEach
     public void setUp(PactVerificationContext context) {
@@ -73,13 +77,21 @@ public class DeliveryAddressServiceTest {
     }
 
     @State("Three customers")
-    public void setThreeCustomers() {
-        testData.executeScript("src/test/sql/data.sql");
+    public void setThreeCustomers() throws Exception {
+        transaction.begin();
+        executeWith(entityManager)
+            .script("sql/create.sql")
+            .script("sql/data.sql");
+        transaction.commit();
     }
 
     @State(value = "Three customers", action = StateChangeAction.TEARDOWN)
-    public void cleanupThreeCustomers() {
-        testData.after();
+    public void cleanupThreeCustomers() throws Exception {
+        if (transaction.getStatus() != Status.STATUS_ACTIVE) {
+            transaction.begin();
+        }
+        with(entityManager).clearDatabase();
+        transaction.commit();
     }
 }
 

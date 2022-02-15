@@ -14,10 +14,6 @@ pipeline {
         VERSION = "${env.BRANCH_NAME == 'master' && !env.LAST_COMMIT_MESSAGE.startsWith('update version to ') ? env.RELEASE_VERSION : env.SNAPSHOT_VERSION}"
         NAMESPACE = "${env.BRANCH_NAME == 'master' ? 'onlineshop' : 'onlineshop-test'}"
         PORT = "${env.BRANCH_NAME == 'master' ? '30002' : '31002'}"
-        HELM_PORT = "${env.BRANCH_NAME == 'master' ? '44134' : '44135'}"
-        TEST_PORT = "${env.BRANCH_NAME == 'master' ? '6002' : '6102'}"
-        WILDFLY_PORT_OFFSET = "${env.BRANCH_NAME == 'master' ? '-2078' : '-1978'}"
-        WILDFLY_MANAGEMENT_PORT = "${env.BRANCH_NAME == 'master' ? '7912' : '8012'}"
     }
 
     triggers {
@@ -55,7 +51,7 @@ pipeline {
                 }
             }
             steps {
-                sh "mvn test -Dtest.http.port=${env.TEST_PORT} -Dwildfly.port.offset=${env.WILDFLY_PORT_OFFSET} -Dwildfly.management.port=${env.WILDFLY_MANAGEMENT_PORT} -B"
+                sh "mvn test -B"
             }
         }
         stage ('Package') {
@@ -90,12 +86,13 @@ pipeline {
                 """
                 sh """
                     cd ./helm 
-                    export HELM_HOST=host.docker.internal:${env.HELM_PORT}
                     helm package ./delivery
-                    helm push --force ./delivery chartmuseum
+                    helm cm-push --force ./delivery chartmuseum
                 """
                 script {
                     if (env.PERFORM_RELEASE.equals('true') && !env.RELEASE_VERSION.equals(env.SNAPSHOT_VERSION)) {
+                        sh 'git config --global user.name "Jenkins"'
+                        sh 'git config --global user.email "ci@openknowledge.de"'
                         sh "mvn scm:checkin -Dmessage='release of version ${env.RELEASE_VERSION}' -B"
                         sh "mvn scm:tag -Dtag=${env.RELEASE_VERSION} -B"
                         int nextRevision = Integer.parseInt(env.RELEASE_VERSION.substring(env.RELEASE_VERSION.lastIndexOf(".") + 1)) + 1
@@ -117,7 +114,6 @@ pipeline {
             }
             steps {
                 sh """
-                    export HELM_HOST=host.docker.internal:${env.HELM_PORT}
                     helm repo update
                     helm upgrade --install delivery --set app.imageTag=${env.VERSION} --set app.service.targetPort=${env.PORT} --namespace ${env.NAMESPACE} chartmuseum/delivery --version=${env.VERSION}
                 """

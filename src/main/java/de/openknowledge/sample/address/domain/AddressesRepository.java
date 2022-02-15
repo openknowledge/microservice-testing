@@ -15,6 +15,8 @@
  */
 package de.openknowledge.sample.address.domain;
 
+import static javax.persistence.PersistenceContextType.EXTENDED;
+
 import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -28,7 +30,7 @@ import javax.transaction.Transactional;
 @ApplicationScoped
 public class AddressesRepository {
 
-    @PersistenceContext(unitName = "delivery-service")
+    @PersistenceContext(unitName = "delivery-service", type = EXTENDED)
     private EntityManager entityManager;
 
     public Optional<Address> find(CustomerNumber number) {
