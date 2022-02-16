@@ -14,7 +14,6 @@ pipeline {
         VERSION = "${env.BRANCH_NAME == 'master' && !env.LAST_COMMIT_MESSAGE.startsWith('update version to ') ? env.RELEASE_VERSION : env.SNAPSHOT_VERSION}"
         NAMESPACE = "${env.BRANCH_NAME == 'master' ? 'onlineshop' : 'onlineshop-test'}"
         PORT = "${env.BRANCH_NAME == 'master' ? '30000' : '31000'}"
-        HELM_PORT = "${env.BRANCH_NAME == 'master' ? '44134' : '44135'}"
     }
 
     triggers {
@@ -87,12 +86,13 @@ pipeline {
                 """
                 sh """
                     cd ./helm 
-                    export HELM_HOST=host.docker.internal:${env.HELM_PORT}
                     helm package ./customer
-                    helm push --force ./customer chartmuseum
+                    helm cm-push --force ./customer chartmuseum
                 """
                 script {
                     if (env.PERFORM_RELEASE.equals('true') && !env.RELEASE_VERSION.equals(env.SNAPSHOT_VERSION)) {
+                        sh 'git config --global user.name "Jenkins"'
+                        sh 'git config --global user.email "ci@openknowledge.de"'
                         sh "mvn scm:checkin -Dmessage='release of version ${env.RELEASE_VERSION}' -B"
                         sh "mvn scm:tag -Dtag=${env.RELEASE_VERSION} -B"
                         int nextRevision = Integer.parseInt(env.RELEASE_VERSION.substring(env.RELEASE_VERSION.lastIndexOf(".") + 1)) + 1
@@ -114,7 +114,6 @@ pipeline {
             }
             steps {
                 sh """
-                    export HELM_HOST=host.docker.internal:${env.HELM_PORT}
                     helm repo update
                     helm upgrade --install customer --set app.imageTag=${env.VERSION} --set app.service.targetPort=${env.PORT} --namespace=${env.NAMESPACE} chartmuseum/customer --version=${env.VERSION}
                 """

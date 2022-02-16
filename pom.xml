@@ -8,7 +8,7 @@
     the ~ specific language governing permissions and limitations under the License. -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.openkonwledge.sample.shop</groupId>
@@ -18,24 +18,18 @@
     <packaging>war</packaging>
 
     <scm>
-        <connection>scm:git:http://openknowledge:cdc-workshop@host.docker.internal:10080/openknowledge/customer-service.git</connection>
-        <developerConnection>scm:git:http://openknowledge:cdc-workshop@host.docker.internal:10080/openknowledge/customer-service.git</developerConnection>
+        <connection>scm:git:http://openknowledge:cdc-workshop@host.docker.internal:7080/openknowledge/customer-service.git</connection>
+        <developerConnection>scm:git:http://openknowledge:cdc-workshop@host.docker.internal:7080/openknowledge/customer-service.git</developerConnection>
     </scm>
 
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <failOnMissingWebXml>false</failOnMissingWebXml>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <meecrowave.version>1.2.9</meecrowave.version>
+        <meecrowave.version>1.2.13</meecrowave.version>
+        <junit.version>5.8.2</junit.version>
     </properties>
-
-    <repositories>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-    </repositories>
 
     <dependencies>
 
@@ -62,11 +56,6 @@
             <version>1.3</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.geronimo.config</groupId>
-            <artifactId>geronimo-config-impl</artifactId>
-            <version>1.2.2</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.9</version>
@@ -75,19 +64,19 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.7.0-RC1</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.7.0-RC1</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>3.6.2</version>
+            <version>3.22.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -99,7 +88,7 @@
         <dependency>
             <groupId>au.com.dius.pact.consumer</groupId>
             <artifactId>junit5</artifactId>
-            <version>4.1.7</version>
+            <version>4.3.5</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -109,20 +98,35 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.ArneLimburg</groupId>
+            <groupId>rocks.limburg.cdimock</groupId>
             <artifactId>cdimock</artifactId>
-            <version>0.9.0</version>
+            <version>1.0.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.config</groupId>
+            <artifactId>geronimo-config-impl</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-validation_1.0_spec</artifactId>
+            <version>1.1</version>
         </dependency>
     </dependencies>
 
     <build>
         <finalName>customer-service</finalName>
-
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M3</version>
+                <version>3.0.0-M5</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <pact.provider.version>${project.version}</pact.provider.version>
+                    </systemPropertyVariables>
+                </configuration>
             </plugin>
         </plugins>
     </build>
