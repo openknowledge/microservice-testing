@@ -52,7 +52,7 @@ pipeline {
                 }
             }
             steps {
-                sh "mvn test -B"
+                sh "mvn test -DpactBroker.url=http://host.docker.internal -B"
             }
         }
         stage ('Package') {
