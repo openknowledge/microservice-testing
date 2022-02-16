@@ -14,6 +14,7 @@ pipeline {
         VERSION = "${env.BRANCH_NAME == 'master' && !env.LAST_COMMIT_MESSAGE.startsWith('update version to ') ? env.RELEASE_VERSION : env.SNAPSHOT_VERSION}"
         NAMESPACE = "${env.BRANCH_NAME == 'master' ? 'onlineshop' : 'onlineshop-test'}"
         PORT = "${env.BRANCH_NAME == 'master' ? '30000' : '31000'}"
+        STAGE = "${env.BRANCH_NAME == 'master' ? 'prod' : 'test'}"
     }
 
     triggers {
@@ -51,7 +52,7 @@ pipeline {
                 }
             }
             steps {
-                sh 'mvn test pact:publish -DpactBroker.url=http://host.docker.internal -B'
+                sh "mvn test pact:publish -DpactBroker.url=http://host.docker.internal -Dpact.consumer.tags=pending-${env.STAGE} -B"
             }
         }
         stage ('Test providers') {
@@ -137,6 +138,8 @@ pipeline {
                     helm repo update
                     helm upgrade --install customer --set app.imageTag=${env.VERSION} --set app.service.targetPort=${env.PORT} --namespace=${env.NAMESPACE} chartmuseum/customer --version=${env.VERSION}
                 """
+                sh "curl -H 'Content-Type: application/json' -X PUT http://host.docker.internal/pacticipants/customer-service/versions/${env.VERSION}/tags/${env.STAGE}"
+                sh "curl -X DELETE http://host.docker.internal/pacticipants/customer-service/versions/${env.VERSION}/tags/pending-${env.STAGE}"
             }
         }
     }
