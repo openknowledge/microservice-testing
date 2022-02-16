@@ -2,6 +2,11 @@
 pipeline {
     agent any
 
+    parameters {
+        booleanParam(name: 'deployOnly', defaultValue: false, description: 'should this job just run to deploy a version')
+        string(name: 'deploymentVersion', defaultValue: 'latest', description: 'which version should be deployed')
+    }
+
     options {
         disableConcurrentBuilds()
     }
@@ -15,10 +20,30 @@ pipeline {
         NAMESPACE = "${env.BRANCH_NAME == 'master' ? 'onlineshop' : 'onlineshop-test'}"
         PORT = "${env.BRANCH_NAME == 'master' ? '30000' : '31000'}"
         STAGE = "${env.BRANCH_NAME == 'master' ? 'prod' : 'test'}"
+        DEPLOYMENT_VERSION = "${params.deploymentVersion != 'latest' ? params.deploymentVersion : env.VERSION}"
     }
 
     triggers {
         pollSCM("* * * * *")
+        GenericTrigger(
+            genericRequestVariables: [
+                [key: 'stage', regexpFilter: ''],
+                [key: 'deployOnly', regexpFilter: ''],
+                [key: 'deploymentVersion', regexpFilter: '']
+            ],
+
+            causeString: 'Triggered by web hook',
+
+            token: 'customer-service',
+
+            printContributedVariables: true,
+            printPostContent: true,
+
+            silentResponse: false,
+
+            regexpFilterText: '$stage',
+            regexpFilterExpression: ".*${(env.BRANCH_NAME == 'master' ? 'prod' : 'test')}.*"
+        )
     }
 
     stages {
@@ -29,6 +54,9 @@ pipeline {
                         branch 'master'
                     }
                     environment name: 'PERFORM_RELEASE', value: 'true'
+                }
+                expression {
+                    params.deployOnly == false
                 }
             }
             steps {
@@ -50,12 +78,15 @@ pipeline {
                     }
                     environment name: 'PERFORM_RELEASE', value: 'true'
                 }
+                expression {
+                    params.deployOnly == false
+                }
             }
             steps {
-                sh "mvn test pact:publish -DpactBroker.url=http://host.docker.internal -Dpact.consumer.tags=pending-${env.STAGE} -B"
+                sh 'mvn test -B'
             }
         }
-        stage ('Test providers') {
+        stage ('Upload pacts') {
             when {
                 anyOf {
                     not {
@@ -63,16 +94,12 @@ pipeline {
                     }
                     environment name: 'PERFORM_RELEASE', value: 'true'
                 }
+                expression {
+                    params.deployOnly == false
+                }
             }
             steps {
-                parallel(
-                    'delivery-service': {
-                        build job: "delivery-service/${env.BRANCH_NAME}", parameters: [booleanParam(name: 'verifyPacts', value: true)]
-                    },
-                    'billing-service': {
-                        build job: "billing-service/${env.BRANCH_NAME}", parameters: [booleanParam(name: 'verifyPacts', value: true)]
-                    }
-                )
+                sh "mvn pact:publish -DpactBroker.url=http://host.docker.internal -Dpact.consumer.tags=pending-${env.STAGE} -B"
             }
         }
         stage ('Package') {
@@ -82,6 +109,9 @@ pipeline {
                         branch 'master'
                     }
                     environment name: 'PERFORM_RELEASE', value: 'true'
+                }
+                expression {
+                    params.deployOnly == false
                 }
             }
             steps {
@@ -96,6 +126,9 @@ pipeline {
                         branch 'master'
                     }
                     environment name: 'PERFORM_RELEASE', value: 'true'
+                }
+                expression {
+                    params.deployOnly == false
                 }
             }
             steps {
@@ -126,20 +159,30 @@ pipeline {
         }
         stage ('Deploy') {
             when {
+                expression {
+                    script {
+                        def deploy = sh script: "pact-broker can-i-deploy --pacticipant customer-service --version ${env.DEPLOYMENT_VERSION} --to ${env.STAGE} --broker-base-url host.docker.internal", returnStatus: true
+                        return deploy == 0
+                    }
+                }
                 anyOf {
                     not {
                         branch 'master'
                     }
                     environment name: 'PERFORM_RELEASE', value: 'true'
+                    expression {
+                        params.deployOnly == true
+                    }
                 }
             }
             steps {
+                echo "Deploying version ${env.DEPLOYMENT_VERSION}"
                 sh """
                     helm repo update
-                    helm upgrade --install customer --set app.imageTag=${env.VERSION} --set app.service.targetPort=${env.PORT} --namespace=${env.NAMESPACE} chartmuseum/customer --version=${env.VERSION}
+                    helm upgrade --install customer --set app.imageTag=${env.DEPLOYMENT_VERSION} --set app.service.targetPort=${env.PORT} --namespace=${env.NAMESPACE} chartmuseum/customer --version=${env.DEPLOYMENT_VERSION}
                 """
-                sh "curl -H 'Content-Type: application/json' -X PUT http://host.docker.internal/pacticipants/customer-service/versions/${env.VERSION}/tags/${env.STAGE}"
-                sh "curl -X DELETE http://host.docker.internal/pacticipants/customer-service/versions/${env.VERSION}/tags/pending-${env.STAGE}"
+                sh "curl -H 'Content-Type: application/json' -X PUT http://host.docker.internal/pacticipants/customer-service/versions/${env.DEPLOYMENT_VERSION}/tags/${env.STAGE}"
+                sh "curl -X DELETE http://host.docker.internal/pacticipants/customer-service/versions/${env.DEPLOYMENT_VERSION}/tags/pending-${env.STAGE}"
             }
         }
     }
