@@ -93,6 +93,8 @@ pipeline {
                 """
                 script {
                     if (env.PERFORM_RELEASE.equals('true') && !env.RELEASE_VERSION.equals(env.SNAPSHOT_VERSION)) {
+                        sh 'git config --global user.name "Jenkins"'
+                        sh 'git config --global user.email "ci@openknowledge.de"'
                         sh "mvn scm:checkin -Dmessage='release of version ${env.RELEASE_VERSION}' -B"
                         sh "mvn scm:tag -Dtag=${env.RELEASE_VERSION} -B"
                         int nextRevision = Integer.parseInt(env.RELEASE_VERSION.substring(env.RELEASE_VERSION.lastIndexOf(".") + 1)) + 1
