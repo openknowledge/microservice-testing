@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+    xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+    <persistence-unit name="delivery-service" transaction-type="RESOURCE_LOCAL">
+        <properties>
+            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://delivery-db:5432/delivery" />
+            <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver" />
+            <property name="javax.persistence.jdbc.user" value="delivery-service" />
+            <property name="javax.persistence.jdbc.password" value="delivery-password"/>
+            <property name="javax.persistence.jdbc.show_sql" value="true" />
+            <!--             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/> -->
+<!--             <property -->
+<!--                 name="javax.persistence.schema-generation.database.action" -->
+<!--                 value="drop-and-create" /> -->
+<!--             <property -->
+<!--                 name="javax.persistence.schema-generation.create-source" -->
+<!--                 value="metadata" /> -->
+<!--             <property name="javax.persistence.schema-generation.drop-source" -->
+<!--                 value="metadata" /> -->
+<!--             <property name="javax.persistence.sql-load-script-source" -->
+<!--                 value="META-INF/load.sql" /> -->
+        </properties>
+    </persistence-unit>
+</persistence>

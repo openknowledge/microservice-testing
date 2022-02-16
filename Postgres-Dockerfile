@@ -1,0 +1,4 @@
+FROM postgres:11.3
+
+COPY ./src/main/resources/sql/create.sql /docker-entrypoint-initdb.d/1-create.sql
+COPY ./src/test/sql/data.sql /docker-entrypoint-initdb.d/2-data.sql

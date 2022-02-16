@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+# first define common meta-data for the deployment
+metadata:
+  name: {{ template "app.fullname" . }}
+  labels:
+    app: {{ template "app.name" . }}
+    component: "{{ .Values.app.name }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+# now the pod template is defined and the number of replicas
+spec:
+  replicas: {{ .Values.app.replicas }}
+  # if you have only one replica, the update strategy is necessary because otherwise, Helm will not wait for 
+  # a completed deployment. Helm waits, until replicas-maxUnavailable pods are available and the default for 
+  # maxUnavailable is 1.
+  selector:
+    matchLabels:
+      app: {{ template "app.name" . }}
+      component: "{{ .Values.app.name }}"
+      release: "{{ .Release.Name }}"
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        # revision and date are used to force a rolling update in Kubernetes
+        revision: "{{ .Release.Revision }}"
+        date: "{{ now | unixEpoch }}"
+        app: {{ template "app.name" . }}
+        component: "{{ .Values.app.name }}"
+        release: "{{ .Release.Name }}"
+    spec:
+      volumes:
+        - name: cache-volume
+          emptyDir: {}
+      # if the image comes from a private registry, setup the secret name to access it
+      {{- if .Values.app.imagePullSecret }}
+      imagePullSecrets:
+      - name: {{ .Values.app.imagePullSecret }}
+      {{- end }}
+      containers:
+      - name: {{ .Values.app.name }}
+        image: {{.Values.app.imageRegistry}}/{{ .Values.app.image }}:{{.Values.app.imageTag}}
+        imagePullPolicy: {{ default "" .Values.app.imagePullPolicy | quote }}
+        # environment variable configuration
+        env:
+        {{- range .Values.app.env }}
+        - name: {{ .name }}
+          value: {{ .value }}
+        {{- end }}
+        ports:
+          - containerPort: {{ .Values.app.service.internalPort }}
+            protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - '-i'
+              - '-c'
+              - >-
+                psql -h 127.0.0.1 -U $POSTGRES_USER -q -d
+                $POSTGRES_DB -c 'SELECT 1'
+          initialDelaySeconds: 10
+          timeoutSeconds: 2
+          periodSeconds: 2
+          successThreshold: 1
+          failureThreshold: 10
+        volumeMounts:
+          - mountPath: {{ .Values.app.volumeMount.mountPath }}
+            name: cache-volume
