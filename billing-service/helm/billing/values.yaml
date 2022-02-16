@@ -1,0 +1,21 @@
+#
+# Ability to override the name
+# overrideName: 
+# overrideFullName: 
+
+# Values belonging to billing application
+app:
+  # Name of the application
+  name: billing
+  imageTag: "latest"
+  image: "billing"
+  imageRegistry: "host.docker.internal:5000"
+  imagePullPolicy: "Always"
+  replicas: 1
+
+  service:
+    # For minikube, set this to NodePort, elsewhere use LoadBalancer
+    # Use ClusterIP if your setup includes ingress controller
+    serviceType: NodePort
+    internalPort: 4001
+    targetPort: 4001
